@@ -1,0 +1,801 @@
+---
+title: "Model similarity ratings and reaction times"
+author: "Kamil K"
+format:
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+---
+
+## Preliminaries
+
+Load packages and data
+
+```{r, message = FALSE}
+library(tidyverse)
+library(lme4)
+library(effects)
+library(ordinal)
+library(hrbrthemes)
+library(emmeans)
+library(ggmosaic)
+library(tinytable)
+library(brms)
+library(parallel)
+extrafont::loadfonts('win', quiet = TRUE)
+theme_set(theme_ipsum(base_family = "Titillium Web"))
+
+xgroup <- read_csv("data/xgroups.csv") |> 
+  rename(exp_group = group)
+```
+
+## Data cleaning
+
+- Size of dataset before cleaning:
+
+```{r}
+orig_size <- nrow(xgroup)
+cat("Number of observations before cleaning:", format(orig_size, big.mark = ","))
+```
+
+- Remove observations with reaction times below 0.2s, minimal amount of time required to respond (cf. Funes, Lupianes & Humphreys, 2010)
+
+```{r}
+xgroup <- xgroup |> 
+  dplyr::filter(rt >= 0.2)
+```
+
+- Remove observations with reaction times above 10s, maximum amount of time to stay focused on a task (cf. Card et al. 1991)
+
+```{r}
+xgroup <- xgroup |> 
+  filter(rt <= 10)
+```
+
+- Size of dataset after cleaning:
+
+```{r}
+(format(clean_size <- nrow(xgroup), big.mark = ","))
+```
+- Number and percentage of observations removed:
+
+```{r}
+cat("Observations removed:", orig_size - clean_size, "i.e.", round((orig_size - clean_size) / orig_size * 100, 2), "%")
+```
+
+
+Adjust group names
+
+```{r}
+xgroup <- xgroup |> 
+  mutate(exp_group = str_replace_all(
+    exp_group, 
+    c("controls" = "Norwegian controls",
+      "^l1_pl_l2_en$" = "bilinguals",
+      "^l1_pl_l2_en_l3_no$" = "trilinguals")
+  )) |> 
+  mutate(exp_group = factor(exp_group, 
+                            levels = c("Norwegian controls", "bilinguals", "trilinguals")))
+```
+
+Change `condition_new` to a factor
+
+```{r}
+xgroup$condition_new <- factor(xgroup$condition_new)
+```
+
+
+## Similarity ratings :: Ordinal regression of rated similarity
+
+```{r, include = FALSE}
+# https://will-ball.github.io/ordinalplots/
+```
+
+### Visualization of proportions
+
+```{r, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 5}
+ggplot(xgroup) +
+  geom_mosaic(aes(product(rated_sim, condition_new), fill = rated_sim), alpha = 1) +
+  scale_fill_brewer(type = "div", palette = 1,
+                    labels = c("1 - V. different", "2", "3", "4", "5", "6", "7 - V. similar"),
+                        guide = guide_legend(reverse = TRUE)) +
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title = element_blank(),
+        axis.title.y = element_blank(),
+        text = element_text(family = "Titillium Web")) +
+  facet_wrap(~lang * exp_group) +
+  labs(y = "Proportion", x = "Condition", fill = "Rated similarity")
+ggsave("plots/fig1_rating_by_lg_by_group.png", dpi = 300, width = 7, height = 4)
+```
+
+### Tables with descriptive statistics
+
+Mode of each condition
+
+```{r}
+xgroup |> 
+  group_by(condition_new) |> 
+  count(rated_sim) |> 
+  rename(
+    condition = condition_new,
+    `Most common rating (=Mode)` = rated_sim) |>
+  filter(n == max(n)) |> 
+  tt()
+``` 
+
+```{r}
+(table_tt <- xgroup |> 
+   group_by(condition_new) |> 
+   filter(condition_new %in% c(1, 2)) |> 
+   count(rated_sim) |> 
+   mutate(prop = n / sum(n),
+          perc = scales::percent(prop, accuracy = 0.1),
+          n = format(n, big.mark = ",")) |> 
+   ungroup() |>
+   select(Similarity = rated_sim, n, perc) |> 
+   tt() |> 
+   group_tt(i = list("Condition = 1" = 1,
+                     "Condition = 2" = 8))
+)
+
+save_tt(table_tt, "tables/sim_decriptive_a.docx", overwrite = TRUE)
+
+(table_tt <- xgroup |> 
+    group_by(condition_new) |> 
+    filter(condition_new %in% c(3, 4)) |> 
+    count(rated_sim) |> 
+    mutate(prop = n / sum(n),
+           perc = scales::percent(prop, accuracy = 0.1),
+           n = format(n, big.mark = ",")) |> 
+    ungroup() |>
+    select(Similarity = rated_sim, n, perc) |> 
+    tt() |> 
+    group_tt(i = list("Condition = 3" = 1,
+                      "Condition = 4" = 8))
+)
+
+save_tt(table_tt, "tables/sim_decriptive_b.docx", overwrite = TRUE)
+```
+
+
+```{r}
+(table_tt <- xgroup |> 
+   count(condition_new, lang, exp_group, rated_sim) |> 
+   pivot_wider(names_from = rated_sim, values_from = n, values_fill = 0) |> 
+   rename("Group" = "exp_group",
+          "Lg" = "lang") |> 
+   select(-condition_new) |> 
+   tt(caption = "Appendix 1: Number of observations in each combination of condition : language : group : rated similarity") |> 
+   group_tt(j = list("Rated similarity (n)" = 3:9)) |> 
+   group_tt(i = list("Condition = 1" = 1,
+                     "Condition = 2" = 7,
+                     "Condition = 3" = 13,
+                     "Condition = 4" = 19))
+)
+
+save_tt(table_tt, "tables/appendix1.docx", overwrite = TRUE)
+```
+
+### Ordinal logistic regression model
+
+A mixed-effects ordinal logistic regression of similarity ratings as a function of **three** treatment-coded categorical predictors: `condition` (levels: `r levels(xgroup$condition_new)`,  reference level: `r levels(factor(xgroup$condition_new))[1]`), `language` of the non-Norwegian phone (levels: `r levels(factor(xgroup$lang))`, reference level: `r levels(factor(xgroup$lang))[1]`), `group` (levels: `r levels(factor(xgroup$exp_group))`, reference level: `r levels(factor(xgroup$exp_group))[1]`) and their three-way interaction. By-participant random intercept.
+
+```{r}
+xgroup$rated_sim <- factor(xgroup$rated_sim)
+```
+
+
+```{r}
+if (file.exists("models/sim_mdl_clmm.rds")) {
+  
+  sim_mdl <- read_rds("models/sim_mdl_clmm.rds")
+  
+} else {
+  
+  sim_mdl <- clmm(rated_sim ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup)
+  
+  write_rds(sim_mdl, "models/sim_mdl_clmm.rds")
+  
+}
+```
+
+
+```{r}
+# https://stackoverflow.com/questions/20588321/pseudo-r-squared-for-cumulative-link-function
+
+# McFadden's r-squared
+ref_mdl <- clm(rated_sim ~ 1,
+     data = xgroup)
+
+McF.pR2 <- 1 - sim_mdl$logLik/ref_mdl$logLik
+cat("Mcfadden's pseudo R-squared:", round(McF.pR2, 3))
+```
+### Verify modeling assumptions
+
+#### An ordered response variable
+
+This assumption is obviously met: the response variable consists in the Likert scale responses (1-7) to the question about the similarity of the two phones. In fact, the fact that the response variable is ordinal is the reason why we are using an ordinal regression model, as opposed to, say, linear regression.
+
+#### Absence of multicollinearity
+
+Since the response in the original model is categorical, we will use a linear mixed-effects model with the same fixed and random effects to check for multicollinearity. 
+
+```{r}
+sim_mdl_vif <- lme4::lmer(as.numeric(rated_sim) ~ 
+                            condition_new * lang * exp_group +
+                            (1 | participant),
+                          data = xgroup)
+```
+
+```{r}
+car::vif(sim_mdl_vif)
+```
+
+None of the values exceeds 10, indicating that multicollinearity is not a concern.
+
+#### Proportional odds
+
+There are no available R functions to test the proportional odds assumption for mixed-effects models. Therefore, we adopted a procedure of fitting a series of binomial logistic regression models with a series of thresholds, and comparing their coefficients. If the coefficients of the models are very different, then the proporional odds assumptions is not met. The binary logistic regression models were fitted with the `brm()` function from the *brms* package (Bayesian models, with default priors), since other approaches hit the wall of convergence issues.
+
+Create binary outcome variables for each threshold
+
+```{r}
+xgroup$threshold1 <- (as.numeric(xgroup$rated_sim) > 1) |> 
+  factor()
+xgroup$threshold2 <- (as.numeric(xgroup$rated_sim) > 2) |> 
+  factor()
+xgroup$threshold3 <- (as.numeric(xgroup$rated_sim) > 3) |> 
+  factor()
+xgroup$threshold4 <- (as.numeric(xgroup$rated_sim) > 4) |> 
+  factor()
+xgroup$threshold5 <- (as.numeric(xgroup$rated_sim) > 5) |> 
+  factor()
+xgroup$threshold6 <- (as.numeric(xgroup$rated_sim) > 6) |> 
+  factor()
+```
+
+Fit separate models
+
+```{r}
+options(mc.cores = parallel::detectCores()) # is indeed faster
+
+model1 <- brm(threshold1 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold1.rds")
+
+model2 <- brm(threshold2 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold2.rds")
+
+
+model3 <- brm(threshold3 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold3.rds")
+
+
+model4 <- brm(threshold4 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold4.rds")
+
+model5 <- brm(threshold5 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold5.rds")
+
+
+model6 <- brm(threshold6 ~ condition_new * lang * exp_group +
+                    (1 | participant),
+                  data = xgroup, family = bernoulli,
+              iter = 2000, file_refit = "on_change",
+                  file = "models/threshold6.rds")
+```
+
+Compare coefficients
+
+```{r}
+model1_coef <- as.data.frame(fixef(model1)) |> 
+  rownames_to_column("term") |> 
+  mutate(threshold = 1)
+
+model2_coef <- as.data.frame(fixef(model2)) |> 
+  rownames_to_column("term") |> 
+  mutate(threshold = 2)
+
+model3_coef <- as.data.frame(fixef(model3)) |> 
+  rownames_to_column("term") |> 
+  mutate(threshold = 3)
+
+model4_coef <- as.data.frame(fixef(model4)) |>
+  rownames_to_column("term") |>
+  mutate(threshold = 4)
+
+model5_coef <- as.data.frame(fixef(model5)) |>
+  rownames_to_column("term") |>
+  mutate(threshold = 5)
+
+model6_coef <- as.data.frame(fixef(model6)) |>
+  rownames_to_column("term") |>
+  mutate(threshold = 6)
+```
+
+```{r}
+all_coefs <- model1_coef |> 
+  bind_rows(model2_coef) |> 
+  bind_rows(model3_coef) |>
+  bind_rows(model4_coef) |>
+  bind_rows(model5_coef) |>
+  bind_rows(model6_coef)
+
+# drop the intercept
+all_coefs <- all_coefs |>
+  filter(term != "Intercept")
+```
+
+```{r}
+#| fig.height: 20
+#| fig.width: 5
+ggplot(all_coefs, aes(threshold, Estimate)) +
+  geom_hline(yintercept = 0) +
+  geom_errorbar(aes(ymin = `Q2.5`, ymax = `Q97.5`)) +
+  geom_point() +
+  labs(y = "Estimate", x = "Term", fill = "Threshold") +
+facet_wrap(~term, ncol = 2)
+```
+
+
+### Signifigance testing
+
+Significance of model terms estimated with the `join_tests()` function from the *emmeans* package.
+
+```{r}
+joint_tests(sim_mdl)
+```
+
+```{r}
+table_data <- joint_tests(sim_mdl)
+table_tt <- table_data |>
+  data.frame() |>
+  select(Term = model.term, df = df1, `F-ratio` = F.ratio, `χ²` = Chisq,`p-value` = p.value) |>
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 3),
+         `F-ratio` = round(`F-ratio`, 3)) |>
+  tt()
+save_tt(table_tt, "tables/sim_joint_tests.docx", overwrite = TRUE)
+```
+
+#### Post-hoc pairwise comparisons
+
+- condition
+
+```{r}
+table_data <- emmeans(sim_mdl, pairwise~condition_new)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |>
+  data.frame() |>
+  select(contrast, `z-ratio` = z.ratio, `p-value` = p.value) |>
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 3),
+         `z-ratio` = round(`z-ratio`, 3)) |>
+  tt(caption = "Appendix 2: Post-hoc pairwise comparisons of rated similarity by condition, averaging over language and group")
+save_tt(table_tt, "tables/appendix2.docx", overwrite = TRUE)
+```
+- condition by group
+
+```{r}
+table_data <- emmeans(sim_mdl, pairwise~exp_group|condition_new)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |>
+  data.frame() |>
+  select(contrast, `z-ratio` = z.ratio, `p-value` = p.value) |>
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 2),
+         `z-ratio` = round(`z-ratio`, 3)) |>
+  tt(caption = "Appendix 3: Post-hoc pairwise comparisons of rated similarity by condition by group, averaging over language") |>
+  group_tt(i = list("Condition = 1" = 1,
+                    "Condition = 2" = 4,
+                    "Condition = 3" = 7,
+                    "Condition = 4" = 10))
+save_tt(table_tt, "tables/appendix3.docx", overwrite = TRUE)
+```
+
+- condition by group by language
+
+```{r}
+table_data <- emmeans(sim_mdl, pairwise~exp_group|condition_new|lang)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |> 
+  data.frame() |> 
+  select(contrast, `z-ratio` = z.ratio, `p-value` = p.value) |> 
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 1),
+         `z-ratio` = round(`z-ratio`, 3)) |> 
+  tt(caption = "Appendix 4: Post-hoc pairwise comparisons of rated similarity by condition by group by language") |> 
+  group_tt(i = list("Condition = 1, Language = EN" = 1,
+                    "Condition = 2, Language = EN" = 4,
+                    "Condition = 3, Language = EN" = 7,
+                    "Condition = 4, Language = EN" = 10,
+                    "Condition = 1, Language = PL" = 13,
+                    "Condition = 2, Language = PL" = 16,
+                    "Condition = 3, Language = PL" = 19,
+                    "Condition = 4, Language = PL" = 22))
+
+save_tt(table_tt, "tables/appendix4.docx", overwrite = TRUE) 
+```
+
+## Reaction times
+
+Convert time from seconds to natural logarithm
+
+```{r}
+xgroup$log_rt <- log(xgroup$rt)
+```
+
+```{r}
+#| include: false
+range(xgroup$rt)
+range(xgroup$log_rt)
+```
+
+Log rt is clearly much closer to normal distribution than raw rt, and so model residuals will be more likely to meet the normality assumption if log rt rather than raw rt is used.
+
+```{r, fig.height = 4, fig.width = 10}
+par(mfrow = c(1, 2))
+hist(xgroup$rt, col = "skyblue")
+hist(xgroup$log_rt, col = "pink")
+```
+
+## Descriptive statistics
+
+```{r}
+(table_tt <- xgroup |> 
+  group_by(condition_new, exp_group, lang) |> 
+  reframe(mean_rt = mean(rt), sd_rt = sd(rt), 
+            mean_log_rt = mean(log_rt), sd_log_rt = sd(log_rt)) |> 
+  mutate(mean_rt = round(mean_rt, 3),
+         sd_rt = round(sd_rt, 3),
+         mean_log_rt = round(mean_log_rt, 3),
+         sd_log_rt = round(sd_log_rt, 3)) |> 
+  select(-condition_new, Group = exp_group, Lg = lang, `Mean (s)` = mean_rt, `SD (s)` = sd_rt, Mean = mean_log_rt, SD = sd_log_rt) |> 
+  tt(caption = "Appendix 5: Descriptive statistics of reaction times") |> 
+  group_tt(i = list("Condition = 1" = 1,
+                    "Condition = 2" = 7,
+                    "Condition = 3" = 13,
+                    "Condition = 4" = 19)) |> 
+  group_tt(j = list("Seconds" = 3:4,
+                    "Natural logarithm" = 5:6)))
+table_tt |> 
+  save_tt("tables/appendix5.docx", overwrite = TRUE)
+```
+
+
+## Linear regression model
+
+A mixed-effects linear regression model of log-transformed reaction times a function of **three** treatment-coded categorical predictors: `condition` (levels: `r levels(xgroup$condition_new)`,  reference level: `r levels(factor(xgroup$condition_new))[1]`), `language` of the non-Norwegian phone (levels: `r levels(factor(xgroup$lang))`, reference level: `r levels(factor(xgroup$lang))[1]`), `group` (levels: `r levels(factor(xgroup$exp_group))`, reference level: `r levels(factor(xgroup$exp_group))[1]`) and their three-way interaction. By-participant random intercept.
+
+```{r}
+rt_mdl <- lmer(log_rt ~ condition_new * lang * exp_group + 
+                  (1|participant), data = xgroup)
+```
+
+```{r}
+#| warning: false
+MuMIn::r.squaredGLMM(rt_mdl)[2]
+```
+
+### Verify modeling assumptions
+
+#### Multicolliniearity
+
+```{r}
+car::vif(rt_mdl)
+```
+
+#### Homoscedasticity
+
+```{r}
+resid_rt <- residuals(rt_mdl)
+fitted_rt <- fitted(rt_mdl)
+diagnose_rt <- tibble(fitted = fitted_rt, residuals = resid_rt)
+```
+
+```{r}
+ggplot(diagnose_rt, aes(fitted, residuals)) +
+  geom_point(alpha = 0.3) +
+  labs(x = "Fitted values", y = "Residuals")
+```
+
+#### Normality
+
+```{r}
+ggplot(diagnose_rt, aes(sample = residuals)) +
+  geom_qq() +
+  geom_qq_line()
+```
+
+```{r}
+#| message: false
+ggplot(diagnose_rt, aes(residuals)) +
+  geom_histogram()
+```
+
+### Significance testing
+
+```{r}
+joint_tests(rt_mdl, pbkrtest.limit = 15040)
+```
+
+```{r}
+(table_data <- joint_tests(rt_mdl, pbkrtest.limit = 15040))
+table_tt <- table_data |>
+  data.frame() |>
+  select(Term = model.term, df1, df2, `F-ratio` = F.ratio, `p-value` = p.value) |>
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 3),
+         `F-ratio` = round(`F-ratio`, 3)) |>
+  tt()
+save_tt(table_tt, "tables/rt_joint_tests.docx", overwrite = TRUE)
+```
+
+#### Post-hoc pairwise comparisons
+
+
+```{r}
+table_data <- emmeans(rt_mdl, pairwise ~  condition_new, pbkrtest.limit = 15040)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |> 
+  data.frame() |> 
+  select(contrast, `t-ratio` = t.ratio, `p-value` = p.value) |> 
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 1),
+         `t-ratio` = round(`t-ratio`, 3)) |> 
+  tt(caption = "Appendix 6: Post-hoc pairwise comparisons of reaction times by condition, averaging over language and group") |>
+save_tt("tables/appendix6.docx", overwrite = TRUE)
+```
+
+```{r}
+table_data <- emmeans(rt_mdl, pairwise ~ condition_new | exp_group, pbkrtest.limit = 15040)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |> 
+  data.frame() |> 
+  
+  mutate(contrast = str_replace_all(contrast, "_new", " ")) |> # underscore caused error when saving as PDF
+  
+  select(contrast, `t-ratio` = t.ratio, `p-value` = p.value) |> 
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 1),
+         `t-ratio` = round(`t-ratio`, 3)) |> 
+  tt(caption = "Appendix 7: Post-hoc pairwise comparisons of condition by group, averaged over language") |> 
+  group_tt(i = list("Group = Norwegian controls" = 1,
+                    "Group = bilinguals" = 7,
+                    "Group = trilinguals" = 13))
+save_tt(table_tt, "tables/appendix7.docx", overwrite = TRUE)
+```
+
+```{r}
+table_data <- emmeans(rt_mdl, pairwise~condition_new|exp_group|lang, pbkrtest.limit = 15040)
+(table_data <- table_data$contrasts)
+table_tt <- table_data |> 
+  data.frame() |> 
+  
+  mutate(contrast = str_replace_all(contrast, "_new", " ")) |> # underscore caused error
+  
+  select(contrast, `t-ratio` = t.ratio, `p-value` = p.value) |> 
+  mutate(`p-value` = format.pval(`p-value`, eps = 0.001, digits = 1),
+         `t-ratio` = round(`t-ratio`, 3)) |> 
+  tt(caption = "Appendix 8: Post-hoc pairwise comparisons of condition by language by group") |> 
+  group_tt(i = list("Group = Norwegian controls, Language = EN" = 1,
+                    "Group = bilinguals, Language = EN" = 7,
+                    "Group = trilinguals, Language = EN" = 13,
+                    "Group = Norwegian controls, Language = PL" = 20,
+                    "Group = bilinguals, Language = PL" = 27,
+                    "Group = trilinguals, Language = PL" = 33)
+  )
+save_tt(table_tt, "tables/appendix8.docx", overwrite = TRUE)
+```
+
+### Visualization of effects
+
+
+```{r}
+effs <- effects::allEffects(rt_mdl)$`condition_new:lang:exp_group` |> 
+  as.data.frame() |> 
+  as_tibble()
+```
+
+
+```{r}
+# brewer::brewer.pal(3, "BrBG") # to match figure 1
+# "#D8B365" "#F5F5F5" "#5AB4AC"
+
+ggplot(effs, aes(condition_new, fit)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .4) +
+  geom_path(aes(group = 1, col = lang)) +
+  geom_point(aes(col = lang), shape = 21, size = 2, fill = "white", stroke = 1) +
+  scale_color_manual(values = c("#D8B365", "#5AB4AC")) +
+  facet_grid(lang~exp_group) +
+  labs(x = "Condition", y = "Log Reation Time\n(fitted)") +
+  theme(legend.position = "none", panel.grid.major.x = element_blank()) +
+  theme(strip.text.y = element_text(angle = 0, vjust = 1))
+```
+
+```{r}
+ggsave("plots/fig2_fitted_rts.png", dpi = 300, width = 7, height = 4)
+```
+
+## Bonus: By-sound-pair statistics
+
+From our codes to IPA:
+
+```{r}
+unique(xgroup$phon_no)
+```
+
+```{r}
+xgroup <- xgroup |> 
+  mutate(phon_no= fct_recode(
+    
+    # Norwegian sounds
+    phon_no,
+    "ɳ" = "rn",    
+    "ɖ" = "rd",
+    "ɭ" = "rl",
+    "ʈ" = "rt",
+    "t" = "tt",
+    "d" = "dd",
+    "ʂ" = "rs"
+  ),
+  
+  phon_other = fct_recode(
+    phon_other,
+    
+    # Polish sounds
+    "tʂ" = "cz",
+    "dʐ" = "dż",
+    "ɲ" = "ni",
+    "ʂ" = "sz",
+    
+    # English sounds
+    "d" = "dd",
+    "dʒ" = "dg",
+    "l" = "ll",
+    "ŋ" = "ng",
+    "ɻ" = "rr", # is that what we've settled on?
+    "ʃ" = "sh",
+    "s" = "ss",
+    "tʃ" = "tch",
+    "t" = "tt"
+    )
+  ) 
+```
+
+```{r}
+table(xgroup$phon_no)
+```
+
+
+```{r}
+table(xgroup$phon_other, xgroup$lang)
+```
+
+### Ratings
+
+- English
+
+```{r}
+# Calculate modes
+modes <- xgroup |> 
+  filter(lang == "EN") |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  count(rated_sim) |> 
+  rename(Mode = rated_sim) |> 
+  filter(n == max(n, na.rm = TRUE)) |> 
+  select(-n)
+
+# if there is more than one mode per group, put them all in one cell
+modes <- modes |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  reframe(Mode = str_c(Mode, collapse = ", "))
+
+table_tt <- xgroup |> 
+  filter(lang == "EN") |> 
+  # some strange 'phones' for EN
+  # taken directly from raw CSV files
+  group_by(phon_no, phon_other, exp_group) |> 
+  count(rated_sim) |> 
+  mutate(prop = n / sum(n),
+         perc = scales::percent(prop, accuracy = 0.1),
+         perc = str_c("(", perc, ")")) |> 
+  mutate(info = str_c(n, " ", perc)) |> 
+  select(-prop, -n, -perc) |> 
+  pivot_wider(names_from = rated_sim, values_from = info, values_fill = "-") |> 
+  rename(NO = phon_no, EN = phon_other, Group = exp_group)
+
+table_tt$`Mode(s)` <- modes$Mode
+  
+table_tt |> 
+  tt(caption = "Similarity ratings: Norwegian vs. English") |> 
+  group_tt(j = list("Rated similarity (n, Percentage)" = 4:10)) |> 
+  save_tt("tables/by_pair_sim_en.docx", overwrite = TRUE)
+```
+
+- Polish
+  
+```{r}
+# Calculate modes
+modes <- xgroup |> 
+  filter(lang == "PL") |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  count(rated_sim) |> 
+  rename(Mode = rated_sim) |> 
+  filter(n == max(n, na.rm = TRUE)) |> 
+  select(-n)
+
+# if there is more than one mode per group, put them all in one cell
+modes <- modes |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  reframe(Mode = str_c(Mode, collapse = ", "))
+
+table_tt <- xgroup |> 
+  filter(lang == "PL") |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  count(rated_sim) |> 
+  mutate(prop = n / sum(n),
+         perc = scales::percent(prop, accuracy = 0.1),
+         perc = str_c("(", perc, ")")) |> 
+  mutate(info = str_c(n, " ", perc)) |> 
+  select(-prop, -n, -perc) |> 
+  pivot_wider(names_from = rated_sim, values_from = info, values_fill = "-") |> 
+  rename(NO = phon_no, PL = phon_other, Group = exp_group)
+
+table_tt$`Mode(s)` <- modes$Mode
+
+table_tt |> 
+  tt(caption = "Similarity ratings: Norwegian vs. Polish") |> 
+  group_tt(j = list("Rated similarity (n, Percentage)" = 4:11)) |> 
+  save_tt("tables/by_pair_sim_pl.docx", overwrite = TRUE)
+```
+
+### Reaction times
+
+- English
+
+```{r}
+table_tt <- xgroup |> 
+  filter(lang == "EN") |> 
+  # some strange 'phones' for EN
+  # taken directly from raw CSV files
+  group_by(phon_no, phon_other, exp_group) |> 
+  reframe(mean_rt = mean(rt), mean_log_rt = mean(log_rt), n = n()) |> 
+  mutate(across(where(is.numeric), ~round(., 3))) |> 
+  rename(NO = phon_no, EN = phon_other, Group = exp_group,
+         `Mean RT (s)` = mean_rt, `Mean RT (log)` = mean_log_rt)
+
+table_tt |> 
+  tt(caption = "Reaction times (Norwegian vs. English)") |> 
+  save_tt("tables/by_pair_rt_en.docx", overwrite = TRUE)
+```
+
+- Polish
+
+```{r}
+table_tt <- xgroup |> 
+  filter(lang == "PL") |> 
+  group_by(phon_no, phon_other, exp_group) |> 
+  reframe(mean_rt = mean(rt), mean_log_rt = mean(log_rt), n = n()) |> 
+  mutate(across(where(is.numeric), ~round(., 3))) |> 
+  rename(NO = phon_no, PL = phon_other, Group = exp_group,
+         `Mean RT (s)` = mean_rt, `Mean RT (log)` = mean_log_rt)
+
+table_tt |> 
+  tt(caption = "Reaction times (Norwegian vs. Polish)") |> 
+  save_tt("tables/by_pair_rt_pl.docx", overwrite = TRUE)
+```
+

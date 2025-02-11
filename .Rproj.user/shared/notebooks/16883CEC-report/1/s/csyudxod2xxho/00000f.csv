@@ -1,0 +1,15 @@
+"0","rating_ver_sa = td %>% "
+"2","Error in exists(cacheKey, where = .rs.WorkingDataEnv, inherits = FALSE) : 
+  invalid first argument
+"
+"0","  filter(question_type == ""semi_affected_questions"") %>% "
+"2","Error in exists(cacheKey, where = .rs.WorkingDataEnv, inherits = FALSE) : 
+  invalid first argument
+"
+"0","  group_by(version) %>% "
+"2","Error in exists(cacheKey, where = .rs.WorkingDataEnv, inherits = FALSE) : 
+  invalid first argument
+"
+"0","  summarise(n_t = n())"
+"2","Error: object 'td' not found
+"

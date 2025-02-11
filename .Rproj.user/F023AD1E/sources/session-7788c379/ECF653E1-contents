@@ -1,0 +1,260 @@
+---
+title: "Survey initial analysis"
+output: html_document
+date: "2025-02-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(here)
+library(tidyverse)
+library(jtools)
+
+td = read.csv(here("data", "ratings_tidy.csv"))
+```
+
+<!-- @tbl-log-model-->
+
+<!---```{r}
+#| label: tbl-log-model
+#| tbl-cap: "Summary of the posterior distribution modeling of the probability of guessing an emotion adjective as a function of animacy and frame The table includes posterior medians, the 95% HDI, the percentage of the HDI within the ROPE, and the maximum probability of effect (MPE)."
+
+read_csv(here("docs", "tables", "study_2_model.csv"), col_types = cols(.default = "c")) %>% 
+  knitr::kable(format = "pandoc", align = c("l", "r", "r", "r", "r", "r"),
+    label = "study2-mod-log")
+```
+-->
+
+# Analysis 
+
+The analysis is broken into sections. The first concerns the most important 5 questions that should be directly affected by the lesson, followed by the remaining directly affected questions, semi-affected questions and ending with the least affected questions. 
+The plots show the percentage of each rating for each question type (instead of total count since groups were unequal).
+
+
+## Most important 5 questions:
+
+1. How much do you like the idea of being/becoming bilingual? `become_bilingual.1` 
+
+2. Even if the other person knows both languages, how rude is it to switch between languages in a conversation? (reverse coded) `codeswitch_rude`
+
+3. How important is Spanish in the United States? `important_spanish`
+
+4. How valuable is it to be bilingual? `valuable`
+
+5. How important is it to not have an accent when speaking a second language? (reverse code) `no_accent`
+
+
+```{r, include=FALSE}
+rating_ver = td %>% 
+  filter(question_type == "most_interested_qs") %>% 
+  group_by(version) %>% 
+  summarise(n_t = n())
+
+
+pct_df_preq = td %>% 
+  filter(question_type == "most_interested_qs") %>% 
+  group_by(version, rating) %>% 
+  summarise(n = n()) %>% 
+  left_join(rating_ver) %>% 
+  mutate(pct = n/n_t)
+```
+
+```{r}
+#| label: pct1
+#| fig-cap: "The percentage of each rating by group for the 5 questions in focus"
+pct_df_preq %>% 
+  ggplot(aes(y = pct, x = rating, fill = as.factor(version))) + 
+  geom_col(color = "black", position = "dodge") + 
+  scale_fill_manual(values = c("#71797E", "seagreen")) +
+  facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
+  ylab("Percentage of Ratings")
+```
+
+<!--- The figure shows the percentage of each rating for the groups 1 and 2.
+Overall, group 1 rated the most five important questions as 5 more often than group 2 (`r round(pct_df_preq$pct[5], digits = 2)*100` percent and `r round(pct_df_preq$pct[10], digits = 2)*100` percent respectively).
+Group 1 chose 4 `r round(pct_df_preq$pct[4], digits = 2)*100` percent of the time, which was slightly less than group 2 `r round(pct_df_preq$pct[10], digits = 2)*100`.
+Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. -->
+
+## The rest of the directly affected questions:
+
+1. Should all schools in the United States teach children to speak in more than one language? `schools_teach` 
+
+2. Is learning Spanish worth the effort it takes?
+`effort`
+
+3. Should people learn another language even if they don't plan on traveling abroad?
+`learn_not_abroad` **I don't see this in the data**
+
+4. Is speaking or learning another language important to you because it will help you in your job or future career?
+`future_career`
+
+5. Is speaking or learning another language important to you because it will help you connect with people who speak that language?
+`connect_with_people`
+
+6. Are multilingual people an asset to the United States?
+`multilingualism_asset`
+
+7. Is it acceptable for people to be monolingual in today's world? (reverse code)
+`acceptable_monolingualism` **I don't see this in the data**
+
+8. Do you think you can become bilingual?
+become_bilingual `become_bilingual`
+
+
+```{r, include=FALSE}
+rating_ver_da = td %>% 
+  filter(question_type == "directly_affected_questions") %>% 
+  group_by(version) %>% 
+  summarise(n_t = n())
+
+pct_df_preq_da = td %>% 
+  filter(question_type == "directly_affected_questions") %>% 
+  group_by(version, rating) %>% 
+  summarise(n = n()) %>% 
+  left_join(rating_ver_da) %>% 
+  mutate(pct = n/n_t)
+```
+
+```{r}
+#| label: pct3
+#| fig-cap: "The percentage of each rating by group for the directly affected questions"
+pct_df_preq_da %>% 
+  ggplot(aes(y = pct, x = rating, fill = as.factor(version))) + 
+  geom_col(color = "black", position = "dodge") + 
+  scale_fill_manual(values = c("#71797E", "seagreen")) +
+  facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
+  ylab("Percentage of Ratings")
+```
+
+## Semi-affected questions:
+
+1. How much smarter does knowing two languages make a person?
+`smarter_two_languages`
+
+2. How much do you wish you started learning Spanish at a younger age?
+`started_younger`
+
+3. How much do you admire people who speak multiple languages?
+`admire_multilinguals`
+
+4. How much do you like learning languages?
+`like_langauges`
+
+5. How much interest do you have in learning a language?
+`interest_languages`
+
+6. How much do you like Spanish?
+`like_spanish`
+
+7. How much do you like hearing Spanish?
+`like_hearing_spanish`
+
+8. How much do you like communicating with Spanish speakers?
+`communicating_spanish_speakers`
+
+9. Do people who speak more than one language have a wider world view than monolinguals?
+`worldview`
+
+10. How boring are Spanish classes? (reverse coded)
+`boring_spanish_class`
+
+11. How fun is studying languages?
+`fun_studying_languages`
+
+12. How interesting is studying languages?
+`interesting_studying_languages`
+
+13. How interesting do you find Spanish-speaking cultures?
+`interesting_spanish_cultures`
+
+14. How beautiful of a language is Spanish?
+`beautiful`
+
+```{r, include=FALSE}
+rating_ver_sa = td %>% 
+  filter(question_type == "semi_affected_questions") %>% 
+  group_by(version) %>% 
+  summarise(n_t = n())
+
+pct_df_preq_sa = td %>% 
+  filter(question_type == "semi_affected_questions") %>% 
+  group_by(version, rating) %>% 
+  summarise(n = n()) %>% 
+  left_join(rating_ver_sa) %>% 
+  mutate(pct = n/n_t)
+```
+
+```{r}
+#| fig-cap: "The percentage of each rating by group for the semi-affected questions"
+pct_df_preq_sa %>% 
+  ggplot(aes(y = pct, x = rating, fill = as.factor(version))) + 
+  geom_col(color = "black", position = "dodge") + 
+  scale_fill_manual(values = c("#71797E", "seagreen")) +
+  facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
+  ylab("Percentage of Ratings")
+```
+
+
+## Least affected questions:
+
+1. How often are you excited to go to Spanish class?
+`excited_spanish_class`
+
+2. How often do you seek out ways to engage with Spanish outside of Spanish class and homework?
+`outside_engagement`
+
+3. How often is Spanish one of your favorite classes?
+`spanish_favorite_class`
+
+4. How difficult is it to learn Spanish in a language classroom? (reverse coded)
+`difficult_classroom_learning`
+
+
+
+```{r, include=FALSE}
+rating_ver_la = td %>% 
+  filter(question_type == "least_affected_questions") %>% 
+  group_by(version) %>% 
+  summarise(n_t = n())
+
+
+pct_df_preq_la = td %>% 
+  filter(question_type == "least_affected_questions") %>% 
+  group_by(version, rating) %>% 
+  summarise(n = n()) %>% 
+  left_join(rating_ver) %>% 
+  mutate(pct = n/n_t)
+
+```
+
+1. How often are you excited to go to Spanish class?
+`excited_spanish_class`
+
+2. How often do you seek out ways to engage with Spanish outside of Spanish class and homework?
+`outside_engagement`
+
+3. How often is Spanish one of your favorite classes?
+`spanish_favorite_class`
+
+4. How difficult is it to learn Spanish in a language classroom? (reverse coded)
+`difficult_classroom_learning`
+
+```{r}
+#| label: pct2
+#| fig-cap: "The percentage of each rating by group for the least effected questions"
+pct_df_preq_la %>% 
+  ggplot(aes(y = pct, x = rating, fill = as.factor(version))) + 
+  geom_col(color = "black", position = "dodge") + 
+  scale_fill_manual(values = c("#71797E", "seagreen")) +
+  facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
+  ylab("Percentage of Ratings")
+
+```
+
+<!--- 
+For both groups, 3 was the most common rating: `r round(pct_df_preq_la$pct[3], digits = 2)*100` percent for group 1 and 
+`r round(pct_df_preq_la$pct[8], digits = 2)*100` percent for group 2. 
+Both groups picked 5 less than 12 percent of the time (`r round(pct_df_preq_la$pct[5], digits = 2)*100` for group 1 and `r round(pct_df_preq_la$pct[10], digits = 2)*100` for group 2).
+--->
+
+

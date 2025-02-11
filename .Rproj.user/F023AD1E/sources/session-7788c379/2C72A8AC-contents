@@ -1,0 +1,61 @@
+---
+title: "Survey initial analysis"
+output: html_document
+date: "2025-02-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(here)
+library(tidyverse)
+library(jtools)
+
+td = read.csv(here("data", "ratings_tidy.csv"))
+```
+
+# Analysis 
+
+The analysis is broken into sections. The first concerns the most important 5 questions that should be directly affected by the lesson. 
+
+
+## Most important 5 questions:
+
+1. How much do you like the idea of being/becoming bilingual? `becoming_bilingual`
+
+2. Even if the other person knows both languages, how rude is it to switch between languages in a conversation? (reverse coded) `codeswitch_rude`
+
+3. How important is Spanish in the United States? `important_spanish`
+
+4. How valuable is it to be bilingual? `valuable`
+
+5. How important is it to not have an accent when speaking a second language? (reverse code) `no_accent`
+
+
+```{r, include=FALSE}
+rating_ver = td %>% 
+  filter(question_type == "most_interested_qs") %>% 
+  group_by(version) %>% 
+  summarise(n_t = n())
+
+
+impcheck = td %>% 
+  filter(question_type == "most_interested_qs") 
+
+pct_df_preq = td %>% 
+  filter(question_type == "most_interested_qs") %>% 
+  group_by(version, rating) %>% 
+  summarise(n = n()) %>% 
+  left_join(rating_ver) %>% 
+  mutate(pct = n/n_t)
+```
+
+```{r, 'pct1', echo=FALSE, fig.cap="The percentage of each rating by test type"}
+pct_df_preq %>% 
+  ggplot(aes(y = pct, x = rating, fill = as.factor(version))) + 
+  geom_col(color = "black", position = "dodge") + 
+  scale_fill_manual(values = c("#71797E", "seagreen")) +
+  facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
+  ylab("Percentage of Ratings")
+```
+
+*Figure 1: The percentage of each rating by test type*
