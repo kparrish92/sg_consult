@@ -1,7 +1,7 @@
 ---
 title: "Survey initial analysis"
 output: html_document
-date: "2025-02-11"
+date: "2025-02-16"
 ---
 
 ```{r setup, include=FALSE}
@@ -33,7 +33,7 @@ The plots show the percentage of each rating for each question type (instead of 
 
 ## Most important 5 questions:
 
-1. How much do you like the idea of being/becoming bilingual? `become_bilingual.1` 
+1. How much do you like the idea of being/becoming bilingual? `like_becoming_bilingual` 
 
 2. Even if the other person knows both languages, how rude is it to switch between languages in a conversation? (reverse coded) `codeswitch_rude`
 

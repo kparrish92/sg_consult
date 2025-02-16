@@ -9,7 +9,7 @@ l2_data = read.csv(here("data", "feb_11_dat.csv"))
 most_interested_qs = c("codeswitch_rude",
                        "valuable",
                        "no_accent",
-                       "become_bilingual.1",
+                       "like_becoming_bilingual",
                        "important_spanish")
 
 directly_affected_questions = c("schools_teach",
