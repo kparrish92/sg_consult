@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -35,6 +69,8 @@ ul.task-list li input[type="checkbox"] {
 <link href="report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="report_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -67,20 +103,65 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<!-- @tbl-log-model-->
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>here() starts at /Users/kyleparrish/Documents/GitHub/sg_consult</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+✔ purrr     1.0.1     </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jtools)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjPlot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 methods overwritten by 'broom':
+  method            from  
+  tidy.glht         jtools
+  tidy.summary.glht jtools
+#refugeeswelcome</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix
 
-<!---```{r}
-#| label: tbl-log-model
-#| tbl-cap: "Summary of the posterior distribution modeling of the probability of guessing an emotion adjective as a function of animacy and frame The table includes posterior medians, the 95% HDI, the percentage of the HDI within the ROPE, and the maximum probability of effect (MPE)."
+Attaching package: 'Matrix'
 
-read_csv(here("docs", "tables", "study_2_model.csv"), col_types = cols(.default = "c")) %>% 
-  knitr::kable(format = "pandoc", align = c("l", "r", "r", "r", "r", "r"),
-    label = "study2-mod-log")
-```
--->
-<section id="analysis" class="level1">
-<h1>Analysis</h1>
+The following objects are masked from 'package:tidyr':
+
+    expand, pack, unpack</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmerTest)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'lmerTest'
+
+The following object is masked from 'package:lme4':
+
+    lmer
+
+The following object is masked from 'package:stats':
+
+    step</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>td <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"ratings_tidy.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="statistical-analysis" class="level1">
+<h1>Statistical Analysis</h1>
 <p>The analysis is broken into sections. The first concerns the most important 5 questions that should be directly affected by the lesson, followed by the remaining directly affected questions, semi-affected questions and ending with the least affected questions. The plots show the percentage of each rating for each question type (instead of total count since groups were unequal).</p>
+<p>To analyze the differences between version 1 and version 2, a series of mixed effects binomial logistic regression models were fit. One model was fit to each question type (four total: most important questions, directly affected questions, semi-affected questions and least affected questions). In the models for most important questions, semi-affected questions and least affected questions, the dependent variable was the log-odds of rating a 4 or 5 (versus 1, 2 or 3). For the directly affected questions, the dependent variable was the probability of choosing “yes” compared to (“no”, “maybe” or “no opinion”). The independent variables in all models were version (1 or 2) and current class (1,2,3 or 4) and their interaction. The random effects included random intercepts for both prompt and participant. For all models, main effects and interactions were assessed using nested model comparisons with the anova function in R. Alpha was always .05.</p>
 <section id="most-important-5-questions" class="level2">
 <h2 class="anchored" data-anchor-id="most-important-5-questions">Most important 5 questions:</h2>
 <ol type="1">
@@ -91,6 +172,12 @@ read_csv(here("docs", "tables", "study_2_model.csv"), col_types = cols(.default 
 <li><p>How important is it to not have an accent when speaking a second language? (reverse code) <code>no_accent</code></p></li>
 </ol>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>pct_df_preq <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> pct, <span class="at">x =</span> rating, <span class="at">fill =</span> <span class="fu">as.factor</span>(version))) <span class="sc">+</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#71797E"</span>, <span class="st">"seagreen"</span>)) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>version) <span class="sc">+</span> <span class="fu">theme_apa</span>() <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Rating choice"</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Percentage of Ratings"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -100,24 +187,111 @@ read_csv(here("docs", "tables", "study_2_model.csv"), col_types = cols(.default 
 </div>
 </div>
 </div>
-<!--- The figure shows the percentage of each rating for the groups 1 and 2.
-Overall, group 1 rated the most five important questions as 5 more often than group 2 (59 percent and 48 percent respectively).
-Group 1 chose 4 29 percent of the time, which was slightly less than group 2 48.
-Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. -->
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>most_int <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"most_interested_qs"</span>)  <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rating_recode =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">5</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">2</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>most_int<span class="sc">$</span>version <span class="ot">=</span> <span class="fu">as.factor</span>(most_int<span class="sc">$</span>version)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>most_int<span class="sc">$</span>current_class <span class="ot">=</span> <span class="fu">as.factor</span>(most_int<span class="sc">$</span>current_class)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>semi_eff <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"semi_affected_questions"</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>least_aff <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"least_affected_questions"</span>)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>null_mod_most <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> most_int)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>ver_mod_most <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> most_int)</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>class_mod_most <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> most_int)</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>int_mod_most <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> current_class<span class="sc">:</span>version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> most_int)</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>most_int <span class="ot">=</span> <span class="fu">anova</span>(null_mod_most, ver_mod_most, class_mod_most, int_mod_most) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(class_mod_most)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: rating_recode ~ version + current_class + (1 | prompt) + (1 |  
+    participant_number)
+   Data: most_int
+
+     AIC      BIC   logLik deviance df.resid 
+   806.7    841.1   -396.3    792.7      998 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4577  0.1965  0.2688  0.4114  1.4077 
+
+Random effects:
+ Groups             Name        Variance Std.Dev.
+ participant_number (Intercept) 1.2183   1.1038  
+ prompt             (Intercept) 0.5108   0.7147  
+Number of obs: 1005, groups:  participant_number, 200; prompt, 5
+
+Fixed effects:
+               Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)      1.8811     0.4984   3.774  0.00016 ***
+version2        -0.8499     0.2689  -3.160  0.00158 ** 
+current_class2   0.7297     0.4663   1.565  0.11764    
+current_class3   0.8571     0.4042   2.120  0.03398 *  
+current_class4   0.9061     0.4095   2.213  0.02692 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Correlation of Fixed Effects:
+            (Intr) versn2 crrn_2 crrn_3
+version2    -0.336                     
+crrnt_clss2 -0.473 -0.018              
+crrnt_clss3 -0.555  0.039  0.618       
+crrnt_clss4 -0.543 -0.005  0.617  0.706</code></pre>
+</div>
+</div>
+<section id="overall-most-imortant-questions" class="level3">
+<h3 class="anchored" data-anchor-id="overall-most-imortant-questions">Overall: Most imortant questions</h3>
+<p>The only differences found for the most important 5 questions was between version 1 and 2 -there was a main effect for version (<span class="math inline">\(\chi\)</span>(1) = 11.77; p &lt; .005), meaning that some of the variation in the data was explained when we consider the what version it came from. There was not evidence of a main effect of current class (<span class="math inline">\(\chi\)</span>(3) = 5.5; p = 0.14) or the current class and version interaction (<span class="math inline">\(\chi\)</span>(3) = 1; p = 0.8).</p>
+</section>
+<section id="specifics-most-important-questions" class="level3">
+<h3 class="anchored" data-anchor-id="specifics-most-important-questions">Specifics: Most important questions</h3>
+<p>The model intercept 1.88 represents the log-odds of choosing a 4 or 5 for version 1 and current_class1. The model predicts that subjects who had version 2 were less likely to ajnswer 4 or 5 (difference in log-odds: -0.85. In probability (calculated by using the <code>plogis</code> function in R), the model predicts a probability of 0.8676111 for version 1 and 0.5681783 for version 2.</p>
+<p>The effects for class suggested that, relative to current_class1, class 3 and 4 were more likely all pick 4 or 5, with a difference of 0.86 for current_class3 (p &gt; .05), and 0.91 for current_class4 (p &gt; .05). Current_class2 was not significantly different (p = .12), but was in the correct direction 0.73</p>
+</section>
 </section>
 <section id="the-rest-of-the-directly-affected-questions" class="level2">
 <h2 class="anchored" data-anchor-id="the-rest-of-the-directly-affected-questions">The rest of the directly affected questions:</h2>
 <ol type="1">
 <li><p>Should all schools in the United States teach children to speak in more than one language? <code>schools_teach</code></p></li>
 <li><p>Is learning Spanish worth the effort it takes? <code>effort</code></p></li>
-<li><p>Should people learn another language even if they don’t plan on traveling abroad? <code>learn_not_abroad</code> <strong>I don’t see this in the data</strong></p></li>
+<li><p>Should people learn another language even if they don’t plan on traveling abroad? <code>learn_not_abroad</code></p></li>
 <li><p>Is speaking or learning another language important to you because it will help you in your job or future career? <code>future_career</code></p></li>
 <li><p>Is speaking or learning another language important to you because it will help you connect with people who speak that language? <code>connect_with_people</code></p></li>
 <li><p>Are multilingual people an asset to the United States? <code>multilingualism_asset</code></p></li>
-<li><p>Is it acceptable for people to be monolingual in today’s world? (reverse code) <code>acceptable_monolingualism</code> <strong>I don’t see this in the data</strong></p></li>
+<li><p>Is it acceptable for people to be monolingual in today’s world? (reverse code) <code>acceptable_monolingualism</code></p></li>
 <li><p>Do you think you can become bilingual? become_bilingual <code>become_bilingual</code></p></li>
 </ol>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>pct_df_preq_da <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> pct, <span class="at">x =</span> rating, <span class="at">fill =</span> <span class="fu">as.factor</span>(version))) <span class="sc">+</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#71797E"</span>, <span class="st">"seagreen"</span>)) <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>version) <span class="sc">+</span> <span class="fu">theme_apa</span>() <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Rating choice"</span>) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Percentage of Ratings"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -127,6 +301,91 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dir_aff <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"directly_affected_questions"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rating_recode =</span> <span class="fu">case_when</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">4</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>dir_aff<span class="sc">$</span>version <span class="ot">=</span> <span class="fu">as.factor</span>(dir_aff<span class="sc">$</span>version)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>dir_aff<span class="sc">$</span>current_class <span class="ot">=</span> <span class="fu">as.factor</span>(dir_aff<span class="sc">$</span>current_class)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>null_mod_dir <span class="ot">=</span> <span class="fu">glmer</span>(rating_recode <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> dir_aff)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>ver_mod_dir <span class="ot">=</span> <span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> dir_aff)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>class_mod_dir <span class="ot">=</span> <span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> dir_aff)</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>int_mod_dir <span class="ot">=</span> <span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> current_class<span class="sc">:</span>version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> dir_aff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+Model failed to converge with max|grad| = 0.00585286 (tol = 0.002, component 1)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dirr_int <span class="ot">=</span> <span class="fu">anova</span>(null_mod_dir, ver_mod_dir, class_mod_dir, int_mod_dir) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(class_mod_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: rating_recode ~ version + current_class + (1 | prompt) + (1 |  
+    participant_number)
+   Data: dir_aff
+
+     AIC      BIC   logLik deviance df.resid 
+  1395.9   1433.6   -690.9   1381.9     1601 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.7716 -0.2258  0.2764  0.3978 10.2939 
+
+Random effects:
+ Groups             Name        Variance Std.Dev.
+ participant_number (Intercept) 2.384    1.544   
+ prompt             (Intercept) 3.642    1.909   
+Number of obs: 1608, groups:  participant_number, 200; prompt, 8
+
+Fixed effects:
+               Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)     1.07942    0.78599   1.373    0.170
+version2       -0.12308    0.26842  -0.459    0.647
+current_class2  0.07872    0.49753   0.158    0.874
+current_class3  0.13616    0.42848   0.318    0.751
+current_class4  0.46247    0.43996   1.051    0.293
+
+Correlation of Fixed Effects:
+            (Intr) versn2 crrn_2 crrn_3
+version2    -0.177                     
+crrnt_clss2 -0.367  0.019              
+crrnt_clss3 -0.427  0.082  0.654       
+crrnt_clss4 -0.420  0.053  0.651  0.743</code></pre>
+</div>
+</div>
+<section id="overall-directly-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="overall-directly-affected-questions">Overall: Directly Affected Questions</h3>
+<p>There were not main effect or interactions in this case, and the final model (adding the interactions) did not converge.</p>
+<p>There not a main effect for version (<span class="math inline">\(\chi\)</span>(1) = 0.23; 0.63), meaning that there was not evidence that the predictor version explained the variance in the choice of yes for the directly affected questions.</p>
+<p>There was also not a main effect for current class (<span class="math inline">\(\chi\)</span>(3) = 1.75; p = 0.63), meaning that there also was not evidence that the probability of a yes choice varied by current class (independently of version).</p>
+<p>The interaction model did not converage - so the latest convered model is reported (with version and current class as fixed effects).</p>
+</section>
+<section id="specifics-directly-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="specifics-directly-affected-questions">Specifics: Directly Affected Questions</h3>
+<p>Since there are no significant effects, we cannot infer that any of the model estimates in this case are reliable. Nonetheless, this is how the terms would be interpreted.</p>
+<p>The model intercept 1.08 represents the log-odds of choosing “yes” (coded as 1) for version 1 and current_class 1 (probability = 0.746494). The model predicted that version 2 participants were -0.12 log-odds less likely to answer “yes”, though we do not have compelling evidence this was not due to chance based on the data alone.</p>
+<p>The effects for class suggested that, relative to current_class1, all of them were more likely to pick “yes”, with a difference of 0.08 for current_class2, 0.14 for current_class3, and 0.46 for current_class4. Again, though, none of the effects had a p-value under .05, meaning that we only have descriptive evidence of any difference for these specific questions.</p>
+</section>
 </section>
 <section id="semi-affected-questions" class="level2">
 <h2 class="anchored" data-anchor-id="semi-affected-questions">Semi-affected questions:</h2>
@@ -147,15 +406,103 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 <li><p>How beautiful of a language is Spanish? <code>beautiful</code></p></li>
 </ol>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>pct_df_preq_sa <span class="sc">%&gt;%</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> pct, <span class="at">x =</span> rating, <span class="at">fill =</span> <span class="fu">as.factor</span>(version))) <span class="sc">+</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#71797E"</span>, <span class="st">"seagreen"</span>)) <span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>version) <span class="sc">+</span> <span class="fu">theme_apa</span>() <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Rating choice"</span>) <span class="sc">+</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Percentage of Ratings"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="report_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="report_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
 <figcaption class="figure-caption">The percentage of each rating by group for the semi-affected questions</figcaption>
 </figure>
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>semi_eff <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"semi_affected_questions"</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">rating_recode =</span> <span class="fu">case_when</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">5</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">2</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>semi_eff<span class="sc">$</span>version <span class="ot">=</span> <span class="fu">as.factor</span>(semi_eff<span class="sc">$</span>version)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>semi_eff<span class="sc">$</span>current_class <span class="ot">=</span> <span class="fu">as.factor</span>(semi_eff<span class="sc">$</span>current_class)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>null_mod_semi <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> semi_eff)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>ver_mod_semi <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> semi_eff)</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>class_mod_semi <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> semi_eff)</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>int_mod_semi <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> current_class<span class="sc">:</span>version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> semi_eff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+Model failed to converge with max|grad| = 0.00304093 (tol = 0.002, component 1)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>semi_int <span class="ot">=</span> <span class="fu">anova</span>(null_mod_semi, ver_mod_semi, class_mod_semi, int_mod_semi) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(class_mod_semi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: rating_recode ~ version + current_class + (1 | prompt) + (1 |  
+    participant_number)
+   Data: semi_eff
+
+     AIC      BIC   logLik deviance df.resid 
+  2729.3   2770.9  -1357.7   2715.3     2807 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-6.3064 -0.4617  0.2284  0.5030 12.4489 
+
+Random effects:
+ Groups             Name        Variance Std.Dev.
+ participant_number (Intercept) 2.322    1.524   
+ prompt             (Intercept) 2.851    1.689   
+Number of obs: 2814, groups:  participant_number, 200; prompt, 14
+
+Fixed effects:
+               Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     -0.3172     0.5767  -0.550 0.582344    
+version2        -0.4572     0.2427  -1.884 0.059623 .  
+current_class2   0.6937     0.4465   1.554 0.120298    
+current_class3   1.2792     0.3809   3.358 0.000784 ***
+current_class4   1.4650     0.3953   3.706 0.000211 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Correlation of Fixed Effects:
+            (Intr) versn2 crrn_2 crrn_3
+version2    -0.215                     
+crrnt_clss2 -0.442  0.011              
+crrnt_clss3 -0.515  0.074  0.646       
+crrnt_clss4 -0.510  0.044  0.646  0.739</code></pre>
+</div>
+</div>
+<section id="overall-semi-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="overall-semi-affected-questions">Overall: Semi-affected Questions</h3>
+<p>In this model, there were main effects for version (<span class="math inline">\(\chi\)</span>(1) = 4.71; p &lt; .05), and for current class (<span class="math inline">\(\chi\)</span>(1) = 17.15; p &lt; .005). The interaction model failed once again to converge. This suggests that both the version (1 vs 2) and current class (1,2,3 or 4) are associated with differences in the probability of a choice of a 4 or 5 rating. The lack of an interaction suggests that the differences between versions 1 and 2 did not depend on the current class.</p>
+</section>
+<section id="specifics-semi-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="specifics-semi-affected-questions">Specifics: Semi-affected Questions</h3>
+<p>The model intercept -0.32 represents the log-odds of choosing 4 or 5 (coded as 1) for version 1 and current_class 1 (probability = 0.4206757). The model predicted that version 2 participants were less likely to answer 4 or 5 (log odds = -0.46), although the p-value is just barely no longer significant when we consider the current_class predictor (p = .06).</p>
+<p>Current class was a stronger predictor for the semi-affected questions, with the same direction as before (later classes were more likely to choose 4 or 5). The effects for class suggested that, relative to current_class1, two of the three classes were more likely to pick “yes”, 1.28 (p &lt; .005) for current_class3, and 1.46 (p &lt; .005) for current_class4. Current_class 2 was the correct direction (0.69, but did not reach significance (p = .12). This suggests, like the previous model, that we cannot conclude for certain that there is a difference between current_class1 and current_class2, but we can make reserved observations and conclusions since the direction of the effect appears to be as predicted.</p>
+</section>
 </section>
 <section id="least-affected-questions" class="level2">
 <h2 class="anchored" data-anchor-id="least-affected-questions">Least affected questions:</h2>
@@ -164,12 +511,14 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 <li><p>How often do you seek out ways to engage with Spanish outside of Spanish class and homework? <code>outside_engagement</code></p></li>
 <li><p>How often is Spanish one of your favorite classes? <code>spanish_favorite_class</code></p></li>
 <li><p>How difficult is it to learn Spanish in a language classroom? (reverse coded) <code>difficult_classroom_learning</code></p></li>
-<li><p>How often are you excited to go to Spanish class? <code>excited_spanish_class</code></p></li>
-<li><p>How often do you seek out ways to engage with Spanish outside of Spanish class and homework? <code>outside_engagement</code></p></li>
-<li><p>How often is Spanish one of your favorite classes? <code>spanish_favorite_class</code></p></li>
-<li><p>How difficult is it to learn Spanish in a language classroom? (reverse coded) <code>difficult_classroom_learning</code></p></li>
 </ol>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>pct_df_preq_la <span class="sc">%&gt;%</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> pct, <span class="at">x =</span> rating, <span class="at">fill =</span> <span class="fu">as.factor</span>(version))) <span class="sc">+</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#71797E"</span>, <span class="st">"seagreen"</span>)) <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>version) <span class="sc">+</span> <span class="fu">theme_apa</span>() <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Rating choice"</span>) <span class="sc">+</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Percentage of Ratings"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -179,11 +528,108 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 </div>
 </div>
 </div>
-<!--- 
-For both groups, 3 was the most common rating: 43 percent for group 1 and 
-37 percent for group 2. 
-Both groups picked 5 less than 12 percent of the time (9 for group 1 and 5 for group 2).
---->
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>least_aff <span class="ot">=</span> td <span class="sc">%&gt;%</span> <span class="fu">filter</span>(question_type <span class="sc">==</span> <span class="st">"least_affected_questions"</span>)  <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">rating_recode =</span> <span class="fu">case_when</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">5</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    rating <span class="sc">==</span> <span class="dv">3</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">2</span> <span class="sc">|</span> rating <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>least_aff<span class="sc">$</span>version <span class="ot">=</span> <span class="fu">as.factor</span>(least_aff<span class="sc">$</span>version)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>least_aff<span class="sc">$</span>current_class <span class="ot">=</span> <span class="fu">as.factor</span>(least_aff<span class="sc">$</span>current_class)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>null_mod_least <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> least_aff)</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>ver_mod_least <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> least_aff)</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>class_mod_least <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>                       <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> least_aff)</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>int_mod_least <span class="ot">=</span> lme4<span class="sc">::</span><span class="fu">glmer</span>(rating_recode <span class="sc">~</span> version <span class="sc">+</span> current_class <span class="sc">+</span> current_class<span class="sc">:</span>version <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> prompt) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> participant_number),</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> least_aff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+Model failed to converge with max|grad| = 0.00326844 (tol = 0.002, component 1)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>least_int <span class="ot">=</span> <span class="fu">anova</span>(null_mod_least, ver_mod_least, class_mod_least, int_mod_least) <span class="sc">%&gt;%</span> </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>least_int</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: least_aff
+Models:
+null_mod_least: rating_recode ~ 1 + (1 | prompt) + (1 | participant_number)
+ver_mod_least: rating_recode ~ version + (1 | prompt) + (1 | participant_number)
+class_mod_least: rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number)
+int_mod_least: rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number)
+                npar    aic    bic log_lik deviance   chisq df pr_chisq
+null_mod_least     3 956.62 970.68 -475.31   950.62                    
+ver_mod_least      4 955.81 974.55 -473.90   947.81  2.8140  1 0.093445
+class_mod_least    7 940.53 973.34 -463.26   926.53 21.2789  3 0.000092
+int_mod_least     10 939.83 986.70 -459.91   919.83  6.7013  3 0.082053</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(class_mod_least)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: rating_recode ~ version + current_class + (1 | prompt) + (1 |  
+    participant_number)
+   Data: least_aff
+
+     AIC      BIC   logLik deviance df.resid 
+   940.5    973.3   -463.3    926.5      795 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.5427 -0.6012 -0.4162  0.8048  2.8033 
+
+Random effects:
+ Groups             Name        Variance Std.Dev.
+ participant_number (Intercept) 0.9806   0.9902  
+ prompt             (Intercept) 0.2680   0.5177  
+Number of obs: 802, groups:  participant_number, 200; prompt, 4
+
+Fixed effects:
+               Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)     -0.5691     0.4317  -1.318   0.1874   
+version2        -0.4032     0.2310  -1.745   0.0810 . 
+current_class2  -1.3323     0.4577  -2.911   0.0036 **
+current_class3  -0.3387     0.3707  -0.914   0.3608   
+current_class4   0.2864     0.3716   0.771   0.4409   
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Correlation of Fixed Effects:
+            (Intr) versn2 crrn_2 crrn_3
+version2    -0.258                     
+crrnt_clss2 -0.526  0.051              
+crrnt_clss3 -0.672  0.089  0.608       
+crrnt_clss4 -0.670  0.039  0.604  0.755</code></pre>
+</div>
+</div>
+<section id="overall-least-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="overall-least-affected-questions">Overall: Least affected Questions</h3>
+<p>Was there a main effect of version?</p>
+<p>Was there a main effect of current_class?</p>
+<p>Was there an interaction?</p>
+<p><em>To report</em>: (<span class="math inline">\(\chi\)</span>(<strong>df</strong>) = <strong>chisq</strong>; <strong>pr_chisq</strong>)</p>
+</section>
+<section id="specifics-least-affected-questions" class="level3">
+<h3 class="anchored" data-anchor-id="specifics-least-affected-questions">Specifics: Least affected Questions</h3>
+<p>What does the intercept represent?</p>
+<p>What does each fixed effect represent?</p>
+<p>How do we interpret the differences?</p>
+</section>
 </section>
 </section>
 

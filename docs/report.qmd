@@ -4,32 +4,24 @@ output: html_document
 date: "2025-02-16"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
 library(here)
 library(tidyverse)
 library(jtools)
+library(sjPlot)
+library(lme4)
+library(lmerTest)
 
 td = read.csv(here("data", "ratings_tidy.csv"))
 ```
 
-<!-- @tbl-log-model-->
-
-<!---```{r}
-#| label: tbl-log-model
-#| tbl-cap: "Summary of the posterior distribution modeling of the probability of guessing an emotion adjective as a function of animacy and frame The table includes posterior medians, the 95% HDI, the percentage of the HDI within the ROPE, and the maximum probability of effect (MPE)."
-
-read_csv(here("docs", "tables", "study_2_model.csv"), col_types = cols(.default = "c")) %>% 
-  knitr::kable(format = "pandoc", align = c("l", "r", "r", "r", "r", "r"),
-    label = "study2-mod-log")
-```
--->
-
-# Analysis 
+# Statistical Analysis 
 
 The analysis is broken into sections. The first concerns the most important 5 questions that should be directly affected by the lesson, followed by the remaining directly affected questions, semi-affected questions and ending with the least affected questions. 
 The plots show the percentage of each rating for each question type (instead of total count since groups were unequal).
 
+To analyze the differences between version 1 and version 2, a series of mixed effects binomial logistic regression models were fit. One model was fit to each question type (four total: most important questions, directly affected questions, semi-affected questions and least affected questions). In the models for most important questions, semi-affected questions and least affected questions, the dependent variable was the log-odds of rating a 4 or 5 (versus 1, 2 or 3). For the directly affected questions, the dependent variable was the probability of choosing "yes" compared to ("no", "maybe" or "no opinion"). The independent variables in all models were version (1 or 2) and current class (1,2,3 or 4) and their interaction. The random effects included random intercepts for both prompt and participant. For all models, main effects and interactions were assessed using nested model comparisons with the anova function in R. Alpha was always .05. 
 
 ## Most important 5 questions:
 
@@ -70,11 +62,60 @@ pct_df_preq %>%
   ylab("Percentage of Ratings")
 ```
 
-<!--- The figure shows the percentage of each rating for the groups 1 and 2.
-Overall, group 1 rated the most five important questions as 5 more often than group 2 (`r round(pct_df_preq$pct[5], digits = 2)*100` percent and `r round(pct_df_preq$pct[10], digits = 2)*100` percent respectively).
-Group 1 chose 4 `r round(pct_df_preq$pct[4], digits = 2)*100` percent of the time, which was slightly less than group 2 `r round(pct_df_preq$pct[10], digits = 2)*100`.
-Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. -->
+```{r}
+most_int = td %>% filter(question_type == "most_interested_qs")  %>% 
+  mutate(rating_recode = case_when(
+    rating == 5 | rating == 4 ~ 1,
+    rating == 3 | rating == 2 | rating == 1 ~ 0,
+  ))
 
+most_int$version = as.factor(most_int$version)
+most_int$current_class = as.factor(most_int$current_class)
+
+
+
+semi_eff = td %>% filter(question_type == "semi_affected_questions")
+least_aff = td %>% filter(question_type == "least_affected_questions")
+
+
+null_mod_most = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = most_int)
+
+ver_mod_most = lme4::glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = most_int)
+
+class_mod_most = lme4::glmer(rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = most_int)
+
+int_mod_most = lme4::glmer(rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = most_int)
+
+most_int = anova(null_mod_most, ver_mod_most, class_mod_most, int_mod_most) %>% 
+  janitor::clean_names()
+```
+
+```{r}
+summary(class_mod_most)
+```
+
+### Overall: Most imortant questions
+
+The only differences found for the most important 5 questions was between version 1 and 2 -there was a main effect for version ($\chi$(1) = `r round(most_int$chisq[2], digits = 2)`; p < .005), meaning that some of the variation in the data was explained when we consider the what version it came from. 
+There was not evidence of a main effect of current class ($\chi$(3) = `r round(most_int$chisq[3], digits = 2)`; p = `r round(most_int$pr_chisq[3], digits = 2)`) or the current class and version interaction ($\chi$(3) = `r round(most_int$chisq[4], digits = 2)`; p = `r round(most_int$pr_chisq[4], digits = 2)`).
+
+### Specifics: Most important questions
+
+The model intercept `r round(fixef(class_mod_most)[1], digits = 2)` represents the log-odds of choosing a 4 or 5 for version 1 and current_class1. 
+The model predicts that subjects who had version 2 were less likely to ajnswer 4 or 5 (difference in log-odds: `r round(fixef(class_mod_most)[2], digits = 2)`.
+In probability (calculated by using the `plogis` function in R), the model predicts a probability of `r plogis(round(fixef(class_mod_most)[1], digits = 2))` for version 1 and `r plogis(round(fixef(class_mod_most)[1], digits = 2)) - plogis(round(fixef(class_mod_most)[2], digits = 2))` for version 2.
+
+The effects for class suggested that, relative to current_class1, class 3 and 4 were more likely all pick 4 or 5, with a difference of
+ `r round(fixef(class_mod_most)[4], digits = 2)` for current_class3 (p > .05), and  `r round(fixef(class_mod_most)[5], digits = 2)` for current_class4 (p > .05). Current_class2 was not significantly different (p = .12), but was in the correct direction `r round(fixef(class_mod_most)[3], digits = 2)` 
+  
 ## The rest of the directly affected questions:
 
 1. Should all schools in the United States teach children to speak in more than one language? `schools_teach` 
@@ -83,7 +124,7 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 `effort`
 
 3. Should people learn another language even if they don't plan on traveling abroad?
-`learn_not_abroad` **I don't see this in the data**
+`learn_not_abroad` 
 
 4. Is speaking or learning another language important to you because it will help you in your job or future career?
 `future_career`
@@ -95,7 +136,7 @@ Fewer than 14 percent of responses were ratings of 1, 2, or 3 in both groups. --
 `multilingualism_asset`
 
 7. Is it acceptable for people to be monolingual in today's world? (reverse code)
-`acceptable_monolingualism` **I don't see this in the data**
+`acceptable_monolingualism` 
 
 8. Do you think you can become bilingual?
 become_bilingual `become_bilingual`
@@ -125,6 +166,62 @@ pct_df_preq_da %>%
   facet_wrap(~version) + theme_apa() + xlab("Rating choice") +
   ylab("Percentage of Ratings")
 ```
+
+```{r}
+dir_aff = td %>% filter(question_type == "directly_affected_questions") %>% 
+  mutate(rating_recode = case_when(
+    rating == 1 ~ 1,
+    rating == 4 | rating == 3 | rating == 2 ~ 0,
+  ))
+
+dir_aff$version = as.factor(dir_aff$version)
+dir_aff$current_class = as.factor(dir_aff$current_class)
+
+
+null_mod_dir = glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = dir_aff)
+
+ver_mod_dir = glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = dir_aff)
+
+class_mod_dir = glmer(rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = dir_aff)
+
+int_mod_dir = glmer(rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = dir_aff)
+
+dirr_int = anova(null_mod_dir, ver_mod_dir, class_mod_dir, int_mod_dir) %>% 
+  janitor::clean_names()
+```
+
+```{r}
+summary(class_mod_dir)
+```
+
+### Overall: Directly Affected Questions
+
+There were not main effect or interactions in this case, and the final model (adding the interactions) did not converge. 
+
+There not a main effect for version ($\chi$(1) = `r round(dirr_int$chisq[2], digits = 2)`; `r round(dirr_int$pr_chisq[3], digits = 2)`), meaning that there was not evidence that the predictor version explained the variance in the choice of yes for the directly affected questions.
+
+There was also not a main effect for current class ($\chi$(3) = `r round(dirr_int$chisq[3], digits = 2)`; p = `r round(dirr_int$pr_chisq[3], digits = 2)`), meaning that there also was not evidence that the probability of a yes choice varied by current class (independently of version).
+
+The interaction model did not converage - so the latest convered model is reported (with version and current class as fixed effects).
+
+### Specifics: Directly Affected Questions 
+
+Since there are no significant effects, we cannot infer that any of the model estimates in this case are reliable. Nonetheless, this is how the terms would be interpreted.
+
+The model intercept `r round(fixef(class_mod_dir)[1], digits = 2)` represents the log-odds of choosing "yes" (coded as 1) for version 1 and current_class 1 (probability = `r plogis(round(fixef(class_mod_dir)[1], digits = 2))`).
+The model predicted that version 2 participants were `r round(fixef(class_mod_dir)[2], digits = 2)` log-odds less likely to answer "yes", though we do not have compelling evidence this was not due to chance based on the data alone.
+
+The effects for class suggested that, relative to current_class1, all of them were more likely to pick "yes", with a difference of `r round(fixef(class_mod_dir)[3], digits = 2)` for current_class2, 
+ `r round(fixef(class_mod_dir)[4], digits = 2)` for current_class3, and  `r round(fixef(class_mod_dir)[5], digits = 2)` for current_class4.
+Again, though, none of the effects had a p-value under .05, meaning that we only have descriptive evidence of any difference for these specific questions.
 
 ## Semi-affected questions:
 
@@ -194,6 +291,53 @@ pct_df_preq_sa %>%
   ylab("Percentage of Ratings")
 ```
 
+```{r}
+semi_eff = td %>% filter(question_type == "semi_affected_questions") %>% mutate(rating_recode = case_when(
+    rating == 5 | rating == 4 ~ 1,
+    rating == 3 | rating == 2 | rating == 1 ~ 0,
+  ))
+
+semi_eff$version = as.factor(semi_eff$version)
+semi_eff$current_class = as.factor(semi_eff$current_class)
+
+
+null_mod_semi = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = semi_eff)
+
+ver_mod_semi = lme4::glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = semi_eff)
+
+class_mod_semi = lme4::glmer(rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = semi_eff)
+
+int_mod_semi = lme4::glmer(rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = semi_eff)
+
+semi_int = anova(null_mod_semi, ver_mod_semi, class_mod_semi, int_mod_semi) %>% 
+  janitor::clean_names()
+```
+
+```{r}
+summary(class_mod_semi)
+```
+
+### Overall: Semi-affected Questions
+
+In this model, there were main effects for version ($\chi$(1) = `r round(semi_int$chisq[2], digits = 2)`; p < .05), and for current class ($\chi$(1) = `r round(semi_int$chisq[3], digits = 2)`; p < .005). The interaction model failed once again to converge. This suggests that both the version (1 vs 2) and current class (1,2,3 or 4) are associated with differences in the probability of a choice of a 4 or 5 rating. The lack of an interaction suggests that the differences between versions 1 and 2 did not depend on the current class.
+
+### Specifics: Semi-affected Questions 
+
+The model intercept `r round(fixef(class_mod_semi)[1], digits = 2)` represents the log-odds of choosing 4 or 5 (coded as 1) for version 1 and current_class 1 (probability = `r plogis(round(fixef(class_mod_semi)[1], digits = 2))`).
+The model predicted that version 2 participants were less likely to answer 4 or 5 (log odds = `r round(fixef(class_mod_semi)[2], digits = 2)`), although the p-value is just barely no longer significant when we consider the current_class predictor (p = .06).
+
+Current class was a stronger predictor for the semi-affected questions, with the same direction as before (later classes were more likely to choose 4 or 5).
+The effects for class suggested that, relative to current_class1, two of the three classes  were more likely to pick "yes", 
+ `r round(fixef(class_mod_semi)[4], digits = 2)` (p < .005) for current_class3, and  `r round(fixef(class_mod_semi)[5], digits = 2)`  (p < .005) for current_class4.
+Current_class 2 was the correct direction (`r round(fixef(class_mod_semi)[3], digits = 2)`, but did not reach significance (p = .12). This suggests, like the previous model, that we cannot conclude for certain that there is a difference between current_class1 and current_class2, but we can make reserved observations and conclusions since the direction of the effect appears to be as predicted.
 
 ## Least affected questions:
 
@@ -208,8 +352,6 @@ pct_df_preq_sa %>%
 
 4. How difficult is it to learn Spanish in a language classroom? (reverse coded)
 `difficult_classroom_learning`
-
-
 
 ```{r, include=FALSE}
 rating_ver_la = td %>% 
@@ -227,17 +369,6 @@ pct_df_preq_la = td %>%
 
 ```
 
-1. How often are you excited to go to Spanish class?
-`excited_spanish_class`
-
-2. How often do you seek out ways to engage with Spanish outside of Spanish class and homework?
-`outside_engagement`
-
-3. How often is Spanish one of your favorite classes?
-`spanish_favorite_class`
-
-4. How difficult is it to learn Spanish in a language classroom? (reverse coded)
-`difficult_classroom_learning`
 
 ```{r}
 #| label: pct2
@@ -251,10 +382,59 @@ pct_df_preq_la %>%
 
 ```
 
-<!--- 
-For both groups, 3 was the most common rating: `r round(pct_df_preq_la$pct[3], digits = 2)*100` percent for group 1 and 
-`r round(pct_df_preq_la$pct[8], digits = 2)*100` percent for group 2. 
-Both groups picked 5 less than 12 percent of the time (`r round(pct_df_preq_la$pct[5], digits = 2)*100` for group 1 and `r round(pct_df_preq_la$pct[10], digits = 2)*100` for group 2).
---->
+```{r}
+least_aff = td %>% filter(question_type == "least_affected_questions")  %>% mutate(rating_recode = case_when(
+    rating == 5 | rating == 4 ~ 1,
+    rating == 3 | rating == 2 | rating == 1 ~ 0,
+  ))
+
+least_aff$version = as.factor(least_aff$version)
+least_aff$current_class = as.factor(least_aff$current_class)
 
 
+null_mod_least = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = least_aff)
+
+ver_mod_least = lme4::glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = least_aff)
+
+class_mod_least = lme4::glmer(rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number),
+                       family = "binomial",
+                       data = least_aff)
+
+int_mod_least = lme4::glmer(rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number),
+                      family = "binomial",
+                      data = least_aff)
+
+least_int = anova(null_mod_least, ver_mod_least, class_mod_least, int_mod_least) %>% 
+  janitor::clean_names()
+
+```
+
+```{r}
+least_int
+```
+
+```{r}
+summary(class_mod_least)
+```
+
+### Overall: Least affected Questions 
+
+Was there a main effect of version?
+
+Was there a main effect of current_class?
+
+Was there an interaction? 
+
+*To report*: ($\chi$(**df**) = **chisq**; **pr_chisq**)
+
+### Specifics: Least affected Questions 
+
+What does the intercept represent? 
+
+What does each fixed effect represent?
+
+How do we interpret the differences? 

@@ -2,7 +2,7 @@ library(here)
 library(tidyverse)
 
 
-l2_data = read.csv(here("data", "feb_11_dat.csv"))
+l2_data = read.csv(here("data", "updated_data.csv"))
 
 # compare the column idea 
 
@@ -14,7 +14,7 @@ most_interested_qs = c("codeswitch_rude",
 
 directly_affected_questions = c("schools_teach",
 "effort",
-"become_bilingual", 
+"can_become_bilingual", 
 "idea",
 "learn_not_abroad",
 "future_career",
@@ -73,35 +73,3 @@ ef %>%
   write.csv(here("data", "ratings_tidy.csv"))
 
 
-
-most_int = ef %>% filter(question_type == "most_interested_qs")
-
-
-
-# logistic model looking for rating of 5 vs below 5 ~ group 
-
-### logistic model shows main effect for version when we predict picking 5 -
-### about a difference in probablity of .1 
-
-f = most_int %>% 
-  mutate(rating_recode = case_when(
-    rating == 5 ~ 1,
-    rating < 5 ~ 0
-  ))
-
-f$version = as.factor(f$version)
-
-
-null_mod = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
-               family = "binomial",
-               data = f)
-
-ver_mod = lme4::glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
-                       family = "binomial",
-                       data = f)
-
-anova(null_mod, ver_mod)
-
-summary(ver_mod)
-
-#####
