@@ -63,39 +63,51 @@ pct_df_preq %>%
 ```
 
 ```{r}
-most_int = td %>% filter(question_type == "most_interested_qs")  %>% 
+most_int_data = td %>% filter(question_type == "most_interested_qs")  %>% 
   mutate(rating_recode = case_when(
     rating == 5 | rating == 4 ~ 1,
     rating == 3 | rating == 2 | rating == 1 ~ 0,
   ))
 
-most_int$version = as.factor(most_int$version)
-most_int$current_class = as.factor(most_int$current_class)
-
-
-
-semi_eff = td %>% filter(question_type == "semi_affected_questions")
-least_aff = td %>% filter(question_type == "least_affected_questions")
+most_int_data$version = as.factor(most_int_data$version)
+most_int_data$current_class = as.factor(most_int_data$current_class)
 
 
 null_mod_most = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number),
                        family = "binomial",
-                       data = most_int)
+                       data = most_int_data)
 
 ver_mod_most = lme4::glmer(rating_recode ~ version + (1 | prompt) + (1 | participant_number),
                       family = "binomial",
-                      data = most_int)
+                      data = most_int_data)
 
 class_mod_most = lme4::glmer(rating_recode ~ version + current_class + (1 | prompt) + (1 | participant_number),
                        family = "binomial",
-                       data = most_int)
+                       data = most_int_data)
 
 int_mod_most = lme4::glmer(rating_recode ~ version + current_class + current_class:version + (1 | prompt) + (1 | participant_number),
                       family = "binomial",
-                      data = most_int)
+                      data = most_int_data)
 
 most_int = anova(null_mod_most, ver_mod_most, class_mod_most, int_mod_most) %>% 
   janitor::clean_names()
+```
+
+```{r}
+# bayesian 
+library(brms)
+
+most_bayes = brm(rating ~ version + (1 | prompt) + (1 | participant_number),
+                        family = "cumulative",
+                        data = most_int_data, 
+                     file = here("data", "models", "most_imp_ord.rds"))
+
+summary(most_bayes)
+
+```
+
+```{r}
+most_int
 ```
 
 ```{r}
@@ -438,3 +450,24 @@ What does the intercept represent?
 What does each fixed effect represent?
 
 How do we interpret the differences? 
+
+
+```{r}
+recode_df = rbind(least_aff, most_int_data, dir_aff, semi_eff)
+
+
+null_mod_comb = lme4::glmer(rating_recode ~ 1 + (1 | prompt) + (1 | participant_number) + (1 | current_class), 
+                       family = "binomial",
+                       data = recode_df)
+
+question_type_mod_comb = lme4::glmer(rating_recode ~ question_type + (1 | prompt) + (1 | participant_number) + (1 | current_class), 
+                       family = "binomial",
+                       data = recode_df)
+
+version_mod_comb = lme4::glmer(rating_recode ~ question_type + version + (1 | prompt) + (1 | participant_number) + (1 | current_class), 
+                       family = "binomial",
+                       data = recode_df)
+
+anova(null_mod_comb, question_type_mod_comb, version_mod_comb)
+
+```
