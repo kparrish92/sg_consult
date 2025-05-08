@@ -39,11 +39,11 @@ An Bayesian Ordinal regression fit in R with `brms` with default priors. Rating 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 td$version = as.factor(td$version)
 
-ord_mod_all = brms::brm(rating ~ version*question_type + (1 | prompt) + 
+ord_mod_all = brms::brm(rating ~ version*question_type + current_class + (1 | prompt) + 
                        (1 | participant_number),
                      family = "cumulative",
                      data = td, 
-                     file = here("data", "models", "ord_mod_all.rds"))
+                     file = here("data", "models", "ord_mod_ct.rds"))
 ```
 
 #### Results 
@@ -51,8 +51,12 @@ ord_mod_all = brms::brm(rating ~ version*question_type + (1 | prompt) +
 See the figures below:
 
 Figure 1 shows the distributions of ratings in all 4 question types.
-Figure 2 is the posterior distribution of the ordinal model - the distributions represent plausible changes in log-odds for each question type and group. The negative estimate suggest that version 2 was more likely to have less favorable ratings for the most interested question [Median = -0.69; 95% HDI -1.03 - -0.33 ], semi-affected questions [Median = -0.52; 95% HDI -0.81 - -0.25 ] and the least affected questions [Median = -0.64; 95% HDI -0.97 - -0.30].
-There was no evidence that the directly affected questions were rated distinctly by the two groups [Median = 0.20; 95% HDI -0.11 - 0.52].
+Figure 2 is the posterior distribution of the ordinal model - the distributions represent plausible changes in log-odds for each question type and group. There was not compelling evidence that versions 1 and 2 were rated distinctly for the directly affected questions [Median = .23; 95% HDI -0.09 - 0.54 ].
+However, there the model did predict that version 2 would be rated lower for the most important questions [Median = -0.68; 95% HDI -1.05 - -0.33], semi-affected questions [Median = -0.52; 95% HDI -0.80 - -0.24] and the least affected questions [Median = -0.65; 95% HDI -1.00 - -0.31].
+There was also evidence that higher level classes tended to have more positive ratings overall [Median = 0.21; 95% HDI 0.10 - 0.32].
+Importantly, this effect arises independently of version.
+Also, by including the class level as a fixed effect, the other fixed effects and interaction terms are estimated with class level held constant. 
+This suggests that the unequal proportions are not the cause of the compelling (significant) interaction terms.
 
 
 ```{r, fig_1, echo = FALSE, warning=FALSE, message=FALSE}
@@ -90,10 +94,12 @@ posterior <- as.matrix(ord_mod_all)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior,
-           pars = c("b_version2", "b_version2:question_typeleast_affected_questions", "b_version2:question_typemost_interested_qs", "b_version2:question_typesemi_affected_questions"),
+           pars = c("b_version2", "b_version2:question_typeleast_affected_questions", "b_version2:question_typemost_interested_qs", "b_version2:question_typesemi_affected_questions",
+                    "b_current_class"),
            prob = 0.8) + plot_title +
-  scale_y_discrete(limits = c("b_version2:question_typeleast_affected_questions",
-                                       "b_version2:question_typesemi_affected_questions",
+  scale_y_discrete(limits = c("b_current_class",
+  "b_version2:question_typeleast_affected_questions",
+  "b_version2:question_typesemi_affected_questions",
                                        "b_version2", "b_version2:question_typemost_interested_qs")) + theme_minimal()
 
 ```
