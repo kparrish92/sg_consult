@@ -17,7 +17,7 @@ library(lme4)
 library(lmerTest)
 library(ordinal)
 library(bayesplot)
-
+library(bayestestR)
 
 td = read.csv(here("data", "ratings_tidy.csv"))
 
@@ -34,7 +34,7 @@ We have evidence that those with instruction answered more positively for 3 of 4
 
 #### Statistical Analysis 
 
-An Bayesian Ordinal regression fit in R with `brms` with default priors. Rating was predicted as a function of survey version (1 or 2) and question type (4 levels), with random intercepts for prompt and participant. 
+An Bayesian Ordinal regression fit in R with `brms` with default priors with the cumulative family. Rating was predicted as a function of survey version (1 or 2) and question type (4 levels), with random intercepts for prompt and participant. The model was fit with 1000 warm-up and 2000 additional iterations accross 4 processing cores. 
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 td$version = as.factor(td$version)
@@ -46,19 +46,28 @@ ord_mod_all = brms::brm(rating ~ version*question_type + current_class + (1 | pr
                      file = here("data", "models", "ord_mod_ct.rds"))
 ```
 
+
 #### Results 
 
-See the figures below:
+```{r, warning = FALSE}
+report_post = describe_posterior(
+  ord_mod_all,
+  effects = "fixed",
+  component = "all",
+  test = c("p_direction", "p_significance"),
+  centrality = "all"
+) %>%
+  as.data.frame() %>% 
+  mutate(across(where(is.numeric), round, 2))
+```
 
-Figure 1 shows the distributions of ratings in all 4 question types.
-Figure 2 is the posterior distribution of the ordinal model - the distributions represent plausible changes in log-odds for each question type and group. There was not compelling evidence that versions 1 and 2 were rated distinctly for the directly affected questions [Median = .23; 95% HDI -0.09 - 0.54 ].
-However, there the model did predict that version 2 would be rated lower for the most important questions [Median = -0.68; 95% HDI -1.05 - -0.33], semi-affected questions [Median = -0.52; 95% HDI -0.80 - -0.24] and the least affected questions [Median = -0.65; 95% HDI -1.00 - -0.31].
-There was also evidence that higher level classes tended to have more positive ratings overall [Median = 0.21; 95% HDI 0.10 - 0.32].
-Importantly, this effect arises independently of version.
-Also, by including the class level as a fixed effect, the other fixed effects and interaction terms are estimated with class level held constant. 
-This suggests that the unequal proportions are not the cause of the compelling (significant) interaction terms.
+Figure 1 shows the distribution of ratings in each of the 4 question types in both versions 1 and 2. 
+The bars represent the percentage of each answer choice in order to show comparable proportions rather than absolute numbers (since the group sizes were not equal).
+The general trends show a right skewed distribution for the most important questions and semi-affected questions, a left skew for directly affected questions, and a normal distribution for least affected questions. 
+Based on this plot alone, there seem to be slightly higher ratings for verson 1 than 2 in all of the question types expect for directly affected questions.
 
 
+**Figure 1: The distribution of ratings by question type.**
 ```{r, fig_1, echo = FALSE, warning=FALSE, message=FALSE}
 rating_ver = td %>% 
   group_by(version, question_type) %>% 
@@ -88,6 +97,41 @@ pct_df_preq_all %>%
         legend.position = "none")
 ```
 
+Table 1 describes posterior distributions of the Bayesian ordinal model, and corroborates the descriptive observations in Figure 1. The model contains five "intercepts" represent cut points in the probability space. If we think of the probability space as a rectangle with a given area that we "cut" into 5 pieces (one for each answer choice). The larger the area of the rectangle in a given piece directly responds to its probability as predicted by the model. That is, if the area of one of the five part of the great rectangle is .5 the area of the total (of the entire rectangle - or probability space), then we say that this the model predicts that the probability of that answer is also .5
+The model, though, does not give the areas of the rectangle, but rather the exact location in which we would draw a vertical line to make one rectangle two conjoined ones. The long side of the rectangle is generally ranges from 0-1 in probability and the estimates tell us where (in log-odds), we can "draw" the first cut point. For example, `Intercept [1]` is the first cutoff point and represents the log-odds of a choice of 1 in the baseline condition (directly affected questions in version 1). The effect is `r report_post$Median[1]` (equal to a probability of `r round(plogis(report_post$Median[1]), digits = 2)`). We can interpret this as strong evidence that 1 is the most probable response in the baseline condition, and it suggests that the cutoff point could range from  `r report_post$CI_low[1]` (probability = `r round(plogis(report_post$CI_low[1]),digits = 2)`) to `r report_post$CI_high[1]` (probability `r round(plogis(report_post$CI_high[1]), digits = 2)`).
+
+The fixed effect `b_version2` tells us the overall shift in ratings going from version 1 to version 2 in the baseline. 
+In this case, we do not have evidence of a compelling difference. 
+We say this because, first, the highest density interval (HDI) overlaps zero [95% HDI `r report_post$Median[5]`, `r report_post$CI_low[5]` - `r report_post$CI_high[5]`], and the probability of direction `r report_post$pd[5]`. 
+On the other hand, `b_current_class` did have a small impact on ratings, in which a one unit increase in class was associated with a change in `r report_post$Median[9]` log-odds [95% HDI `r report_post$CI_low[9]` - `r report_post$CI_high[9]`]. 
+
+**Table 1: Summary of the posterior distribution**
+```{r, warning = FALSE}
+describe_posterior(
+  ord_mod_all,
+  effects = "fixed",
+  component = "all",
+  test = c("p_direction", "p_significance"),
+  centrality = "all"
+) %>%
+  as.data.frame() %>% 
+  mutate(across(where(is.numeric), round, 2)) %>% 
+  knitr::kable(row.names = FALSE)
+```
+
+The research questions (specifically question 2) are best answered by the interaction terms `b_version2:question_typeleast_affected_questions`, `b_version2:question_typemost_interested_qs` and `b_version2:question_typesemi_affected_questions`, since these estimates test the differences between versions for each question type. 
+In this case, the model predicted with compelling evidence that version 2 was rated lower for the most important questions 
+[`r report_post$Median[11]`; 95% HDI `r report_post$CI_low[11]` - `r report_post$CI_high[11]`], semi-affected questions 
+[`r report_post$Median[12]`; 95% HDI `r report_post$CI_low[12]` - `r report_post$CI_high[12]`] and the least affected questions 
+[`r report_post$Median[10]`; 95% HDI `r report_post$CI_low[10]` - `r report_post$CI_high[10]`].
+Vitally, by including the class level as a fixed effect, the other fixed effects and interaction terms are estimated with class level held constant. 
+This suggests that the unequal proportions are not the cause of the compelling (significant) interaction terms.
+
+Figure 2 visualizes the posterior distributions that are directly relevant to the research questions from Table 1. 
+The distributions show the 95% range of plausible estimates for each effect with the shaded region representing 80% of plausible estimates.
+It can be seen that all of these estimates do not overlap zero, except for directly affected questions. 
+
+**Figure 2: The posterior distributions of the Bayesian Ordinal Model.**
 ```{r, fig_2, echo = FALSE, warning=FALSE, message=FALSE}
 posterior <- as.matrix(ord_mod_all)
 
@@ -106,6 +150,8 @@ mcmc_areas(posterior,
 
 
 ## **RQ 3:** Does learning explicitly about bilingualism impact students differently based on proficiency level?
+
+> This model can be reported in the manuscript or made a supplementary analysis for an appendix. It's totally up to you since we have now included current_class in the main model, but I think this may not be needed any more. Let me know if you'd like a detailed interpretation of this model also.
 
 It does not appear so - there is no evidence that class level impacted the size of the effect of having explicit instruction.
 
