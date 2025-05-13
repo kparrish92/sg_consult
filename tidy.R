@@ -6,13 +6,13 @@ l2_data = read.csv(here("data", "updated_data.csv"))
 
 # compare the column idea 
 
-most_interested_qs = c("codeswitch_rude",
+directly_affected_questions = c("codeswitch_rude",
                        "valuable",
                        "no_accent",
                        "like_becoming_bilingual",
                        "important_spanish")
 
-directly_affected_questions = c("schools_teach",
+old_directly_affected_questions = c("schools_teach",
 "effort",
 "can_become_bilingual", 
 "idea",
@@ -48,7 +48,7 @@ ef = l2_data %>%
     prompt %in% directly_affected_questions ~ "directly_affected_questions",
     prompt %in% semi_affected_questions ~ "semi_affected_questions",
     prompt %in% least_affected_questions ~ "least_affected_questions",
-    prompt %in% most_interested_qs ~ "most_interested_qs",
+    prompt %in% old_directly_affected_questions ~ "old_directly_affected_questions",
   )) %>% 
   filter(!is.na(rating))
 

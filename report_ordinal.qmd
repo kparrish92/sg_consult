@@ -4,7 +4,7 @@ output: html_document
 format:
   html: 
     fig-format: svg
-date: "2025-04-21"
+date: "2025-05-13"
 ---
 
 ```{r setup, echo = FALSE, include = FALSE}
@@ -19,7 +19,8 @@ library(ordinal)
 library(bayesplot)
 library(bayestestR)
 
-td = read.csv(here("data", "ratings_tidy.csv"))
+td = read.csv(here("data", "ratings_tidy.csv")) %>% 
+  filter(question_type != "old_directly_affected_questions")
 
 ```
 
@@ -31,10 +32,9 @@ This one I don't think we can answer with the data (no pre/post design)
 
 We have evidence that those with instruction answered more positively for 3 of 4 question types.
 
-
 #### Statistical Analysis 
 
-An Bayesian Ordinal regression fit in R with `brms` with default priors with the cumulative family. Rating was predicted as a function of survey version (1 or 2) and question type (4 levels), with random intercepts for prompt and participant. The model was fit with 1000 warm-up and 2000 additional iterations accross 4 processing cores. 
+An Bayesian Ordinal regression fit in R with `brms` with default priors with the cumulative family. Rating was predicted as a function of survey version (1 or 2) and question type (4 levels), with random intercepts for prompt and participant. The model was fit with 1000 warm-up and 2000 additional iterations across 4 processing cores. 
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 td$version = as.factor(td$version)
@@ -43,7 +43,7 @@ ord_mod_all = brms::brm(rating ~ version*question_type + current_class + (1 | pr
                        (1 | participant_number),
                      family = "cumulative",
                      data = td, 
-                     file = here("data", "models", "ord_mod_ct.rds"))
+                     file = here("data", "models", "ord_mod_no_daf.rds"))
 ```
 
 
@@ -64,7 +64,7 @@ report_post = describe_posterior(
 Figure 1 shows the distribution of ratings in each of the 4 question types in both versions 1 and 2. 
 The bars represent the percentage of each answer choice in order to show comparable proportions rather than absolute numbers (since the group sizes were not equal).
 The general trends show a right skewed distribution for the most important questions and semi-affected questions, a left skew for directly affected questions, and a normal distribution for least affected questions. 
-Based on this plot alone, there seem to be slightly higher ratings for verson 1 than 2 in all of the question types expect for directly affected questions.
+Based on this plot alone, there seem to be slightly higher ratings for version 1 than 2 in all of the question types expect for directly affected questions.
 
 
 **Figure 1: The distribution of ratings by question type.**
@@ -80,10 +80,10 @@ pct_df_preq_all = td %>%
   mutate(pct = n/n_t)
 
 # Modify the data
-pct_df_preq_all$question_type <- factor(pct_df_preq_all$question_type, levels = c("directly_affected_questions", "least_affected_questions", "most_interested_qs", "semi_affected_questions"), 
-                  labels = c("Directly affected questions", "Least affected questions", "Most important questions", "Semi-affected questions"))
+pct_df_preq_all$question_type <- factor(pct_df_preq_all$question_type, levels = c("directly_affected_questions", "least_affected_questions", "semi_affected_questions"), 
+                  labels = c("Directly affected questions", "Least affected questions", "Semi-affected questions"))
 
-pct_df_preq_all$question_type_f = factor(pct_df_preq_all$question_type, levels=c('Most important questions', 'Directly affected questions','Semi-affected questions','Least affected questions'))
+pct_df_preq_all$question_type_f = factor(pct_df_preq_all$question_type, levels=c('Directly affected questions','Semi-affected questions','Least affected questions'))
 
 
 pct_df_preq_all %>% 
@@ -98,12 +98,14 @@ pct_df_preq_all %>%
 ```
 
 Table 1 describes posterior distributions of the Bayesian ordinal model, and corroborates the descriptive observations in Figure 1. The model contains five "intercepts" represent cut points in the probability space. If we think of the probability space as a rectangle with a given area that we "cut" into 5 pieces (one for each answer choice). The larger the area of the rectangle in a given piece directly responds to its probability as predicted by the model. That is, if the area of one of the five part of the great rectangle is .5 the area of the total (of the entire rectangle - or probability space), then we say that this the model predicts that the probability of that answer is also .5
-The model, though, does not give the areas of the rectangle, but rather the exact location in which we would draw a vertical line to make one rectangle two conjoined ones. The long side of the rectangle is generally ranges from 0-1 in probability and the estimates tell us where (in log-odds), we can "draw" the first cut point. For example, `Intercept [1]` is the first cutoff point and represents the log-odds of a choice of 1 in the baseline condition (directly affected questions in version 1). The effect is `r report_post$Median[1]` (equal to a probability of `r round(plogis(report_post$Median[1]), digits = 2)`). We can interpret this as strong evidence that 1 is the most probable response in the baseline condition, and it suggests that the cutoff point could range from  `r report_post$CI_low[1]` (probability = `r round(plogis(report_post$CI_low[1]),digits = 2)`) to `r report_post$CI_high[1]` (probability `r round(plogis(report_post$CI_high[1]), digits = 2)`).
+The model, though, does not give the areas of the rectangle, but rather the exact location in which we would draw a vertical line to make one rectangle two conjoined ones. The long side of the rectangle is generally ranges from 0-1 in probability and the estimates tell us where (in log-odds), we can "draw" the first cut point. For example, `Intercept [1]` is the first cutoff point and represents the log-odds of a choice of 1 in the baseline condition.
+
+<!--- The effect is `r report_post$Median[1]` (equal to a probability of `r round(plogis(report_post$Median[1]), digits = 2)`). We can interpret this as strong evidence that 1 is the most probable response in the baseline condition, and it suggests that the cutoff point could range from  `r report_post$CI_low[1]` (probability = `r round(plogis(report_post$CI_low[1]),digits = 2)`) to `r report_post$CI_high[1]` (probability `r round(plogis(report_post$CI_high[1]), digits = 2)`).
 
 The fixed effect `b_version2` tells us the overall shift in ratings going from version 1 to version 2 in the baseline. 
 In this case, we do not have evidence of a compelling difference. 
 We say this because, first, the highest density interval (HDI) overlaps zero [95% HDI `r report_post$Median[5]`, `r report_post$CI_low[5]` - `r report_post$CI_high[5]`], and the probability of direction `r report_post$pd[5]`. 
-On the other hand, `b_current_class` did have a small impact on ratings, in which a one unit increase in class was associated with a change in `r report_post$Median[9]` log-odds [95% HDI `r report_post$CI_low[9]` - `r report_post$CI_high[9]`]. 
+On the other hand, `b_current_class` did have a small impact on ratings, in which a one unit increase in class was associated with a change in `r report_post$Median[9]` log-odds [95% HDI `r report_post$CI_low[9]` - `r report_post$CI_high[9]`]. --->
 
 **Table 1: Summary of the posterior distribution**
 ```{r, warning = FALSE}
@@ -119,7 +121,7 @@ describe_posterior(
   knitr::kable(row.names = FALSE)
 ```
 
-The research questions (specifically question 2) are best answered by the interaction terms `b_version2:question_typeleast_affected_questions`, `b_version2:question_typemost_interested_qs` and `b_version2:question_typesemi_affected_questions`, since these estimates test the differences between versions for each question type. 
+<!--- The research questions (specifically question 2) are best answered by the interaction terms `b_version2:question_typeleast_affected_questions`, `b_version2:question_typemost_interested_qs` and `b_version2:question_typesemi_affected_questions`, since these estimates test the differences between versions for each question type. 
 In this case, the model predicted with compelling evidence that version 2 was rated lower for the most important questions 
 [`r report_post$Median[11]`; 95% HDI `r report_post$CI_low[11]` - `r report_post$CI_high[11]`], semi-affected questions 
 [`r report_post$Median[12]`; 95% HDI `r report_post$CI_low[12]` - `r report_post$CI_high[12]`] and the least affected questions 
@@ -129,7 +131,7 @@ This suggests that the unequal proportions are not the cause of the compelling (
 
 Figure 2 visualizes the posterior distributions that are directly relevant to the research questions from Table 1. 
 The distributions show the 95% range of plausible estimates for each effect with the shaded region representing 80% of plausible estimates.
-It can be seen that all of these estimates do not overlap zero, except for directly affected questions. 
+It can be seen that all of these estimates do not overlap zero, except for directly affected questions. --->
 
 **Figure 2: The posterior distributions of the Bayesian Ordinal Model.**
 ```{r, fig_2, echo = FALSE, warning=FALSE, message=FALSE}
@@ -138,13 +140,13 @@ posterior <- as.matrix(ord_mod_all)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior,
-           pars = c("b_version2", "b_version2:question_typeleast_affected_questions", "b_version2:question_typemost_interested_qs", "b_version2:question_typesemi_affected_questions",
+           pars = c("b_version2", "b_version2:question_typeleast_affected_questions", "b_version2:question_typesemi_affected_questions",
                     "b_current_class"),
            prob = 0.8) + plot_title +
   scale_y_discrete(limits = c("b_current_class",
   "b_version2:question_typeleast_affected_questions",
   "b_version2:question_typesemi_affected_questions",
-                                       "b_version2", "b_version2:question_typemost_interested_qs")) + theme_minimal()
+                                       "b_version2")) + theme_minimal()
 
 ```
 
