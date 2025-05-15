@@ -152,7 +152,7 @@ It does not appear so - there is no evidence that class level impacted the size 
 
 #### Statistical Analysis 
 
-An Bayesian Ordinal regression fit in R with `brms` with default priors. Rating was predicted as a function of survey version (1 or 2) and current class (4 levels), with random intercepts for prompt and participant. 
+An Bayesian Ordinal regression fit in R with `brms` with default priors. Rating was predicted as a function of survey version (1 or 2) and current class (3 levels), with random intercepts for prompt and participant. 
 
 ```{r, warning = FALSE, message=FALSE}
 
