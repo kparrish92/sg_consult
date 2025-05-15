@@ -30,7 +30,7 @@ This one I don't think we can answer with the data (no pre/post design)
 
 ## **RQ 2:** How do the attitudes towards bilingualism and language learning differ between students who have received explicit instruction about bilingualism and those who have not? 
 
-We have evidence that those with instruction answered more positively for 3 of 4 question types.
+We have evidence that those with instruction answered more positively for directly affected questions, but not the other two.
 
 #### Statistical Analysis 
 
