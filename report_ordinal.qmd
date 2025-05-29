@@ -26,6 +26,8 @@ td = read.csv(here("data", "ratings_tidy.csv")) %>%
     version == 2 ~ "control_group"
   ))
 
+td$version = as.factor(td$version)
+td$version = relevel(td$version, ref = "experimental_group")
 ```
 
 ## **RQ 1:** Does learning explicitly about bilingualism impact novice-intermediate L2 learners’ attitudes towards bilingualism and language learning? 
@@ -70,7 +72,7 @@ The bars represent the percentage of each answer choice in order to show compara
 The general trends show a right skewed distribution for the semi-affected questions, a left skew for directly affected questions, and a normal distribution for least affected questions. 
 
 **Figure 1: The distribution of ratings by question type.**
-```{r, fig_1, echo = FALSE, warning=FALSE, message=FALSE}
+```{r, fig_1, echo = FALSE, warning=FALSE, message=FALSE, dpi = 600}
 rating_ver = td %>% 
   group_by(version, question_type) %>% 
   summarise(n_t = n())
@@ -138,13 +140,13 @@ posterior <- as.matrix(ord_mod_all)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior,
-           pars = c("b_versionexperimental_group", "b_versionexperimental_group:question_typeleast_affected_questions", "b_versionexperimental_group:question_typesemi_affected_questions",
+           pars = c("b_versioncontrol_group", "b_versioncontrol_group:question_typeleast_affected_questions", "b_versioncontrol_group:question_typesemi_affected_questions",
                     "b_current_class"),
            prob = 0.8) + plot_title +
   scale_y_discrete(limits = c("b_current_class",
-  "b_versionexperimental_group:question_typeleast_affected_questions",
-  "b_versionexperimental_group:question_typesemi_affected_questions",
-                                       "b_versionexperimental_group")) + theme_minimal()
+  "b_versioncontrol_group:question_typeleast_affected_questions",
+  "b_versioncontrol_group:question_typesemi_affected_questions",
+                                       "b_versioncontrol_group")) + theme_minimal()
 
 ggsave(here("plots", "fig2.png"), dpi = 600)
 
@@ -205,11 +207,22 @@ posterior_o<- as.matrix(ord_mod_class)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior_o,
-           pars = c("b_versionexperimental_group", 
-                    "b_current_class2:versionexperimental_group", "b_current_class3:versionexperimental_group", "b_current_class4:versionexperimental_group"),
+           pars = c("b_versioncontrol_group", 
+                    "b_current_class2:versioncontrol_group", "b_current_class3:versioncontrol_group", "b_current_class4:versioncontrol_group"),
            prob = 0.8) + plot_title + theme_minimal()
 
 ggsave(here("plots", "fig4.png"), dpi = 600)
 ```
 
-
+```{r, warning = FALSE}
+describe_posterior(
+  ord_mod_class,
+  effects = "fixed",
+  component = "all",
+  test = c("p_direction", "p_significance"),
+  centrality = "all"
+) %>%
+  as.data.frame() %>% 
+  mutate(across(where(is.numeric), round, 2)) %>% 
+  knitr::kable(row.names = FALSE)
+```

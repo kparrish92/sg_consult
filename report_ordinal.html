@@ -87,23 +87,23 @@ ul.task-list li input[type="checkbox"] {
 <p><img src="report_ordinal_files/figure-html/fig_1-1.png" class="img-fluid"></p>
 </div>
 </div>
-<p>Table 1 describes posterior distributions of the Bayesian ordinal model, and corroborates the descriptive observations in Figure 1. The model contains five “intercepts” represent cut points in the probability space. If we think of the probability space as a rectangle with a given area that we “cut” into 5 pieces (one for each answer choice). The larger the area of the rectangle in a given piece directly responds to its probability as predicted by the model. That is, if the area of one of the five part of the great rectangle is .5 the area of the total (of the entire rectangle - or probability space), then we say that this the model predicts that the probability of that answer is also .5 The model, though, does not give the areas of the rectangle, but rather the exact location in which we would draw a vertical line to make one rectangle two conjoined ones. The long side of the rectangle is generally ranges from 0-1 in probability and the estimates tell us where (in log-odds), we can “draw” the first cut point. For example, <code>Intercept [1]</code> is the first cutoff point and represents the log-odds of a choice of 1 in the baseline condition. The effect is -4.5 (equal to a probability of 0.01). We can interpret this as strong evidence that 1 is the most probable response in the baseline condition, and it suggests that the cutoff point could range from -5.63 (probability = 0) to -3.36 (probability 0.03).</p>
-<p>The fixed effect <code>b_version2</code> tells us the overall shift in ratings going from version 1 to version 2 in the baseline [95% HDI 0.45, -0.04 - 0.92], and the probability of direction 0.96. Additionally, <code>b_current_class</code> did have a small impact on ratings, in which a one unit increase in class was associated with a change in 0.43 log-odds [95% HDI 0.24 - 0.63].</p>
+<p>Table 1 describes posterior distributions of the Bayesian ordinal model, and corroborates the descriptive observations in Figure 1. The model contains five “intercepts” represent cut points in the probability space. If we think of the probability space as a rectangle with a given area that we “cut” into 5 pieces (one for each answer choice). The larger the area of the rectangle in a given piece directly responds to its probability as predicted by the model. That is, if the area of one of the five part of the great rectangle is .5 the area of the total (of the entire rectangle - or probability space), then we say that this the model predicts that the probability of that answer is also .5 The model, though, does not give the areas of the rectangle, but rather the exact location in which we would draw a vertical line to make one rectangle two conjoined ones. The long side of the rectangle is generally ranges from 0-1 in probability and the estimates tell us where (in log-odds), we can “draw” the first cut point. For example, <code>Intercept [1]</code> is the first cutoff point and represents the log-odds of a choice of 1 in the baseline condition. The effect is -4.95 (equal to a probability of 0.01). We can interpret this as strong evidence that 1 is the most probable response in the baseline condition, and it suggests that the cutoff point could range from -6.08 (probability = 0) to -3.78 (probability 0.02).</p>
+<p>The fixed effect <code>b_version2</code> tells us the overall shift in ratings going from version 1 to version 2 in the baseline [95% HDI -0.44, -0.92 - 0.06], and the probability of direction 0.95. Additionally, <code>b_current_class</code> did have a small impact on ratings, in which a one unit increase in class was associated with a change in 0.42 log-odds [95% HDI 0.23 - 0.63].</p>
 <p><strong>Table 1: Summary of the posterior distribution</strong></p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-sm table-striped small">
 <colgroup>
-<col style="width: 51%">
+<col style="width: 49%">
 <col style="width: 5%">
 <col style="width: 4%">
 <col style="width: 4%">
-<col style="width: 3%">
+<col style="width: 4%">
 <col style="width: 5%">
 <col style="width: 6%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 4%">
 <col style="width: 6%">
 </colgroup>
 <thead>
@@ -124,139 +124,139 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">b_Intercept[1]</td>
-<td style="text-align: right;">-4.50</td>
-<td style="text-align: right;">-4.50</td>
-<td style="text-align: right;">-4.44</td>
+<td style="text-align: right;">-4.95</td>
+<td style="text-align: right;">-4.95</td>
+<td style="text-align: right;">-4.93</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-5.63</td>
-<td style="text-align: right;">-3.36</td>
+<td style="text-align: right;">-6.08</td>
+<td style="text-align: right;">-3.78</td>
 <td style="text-align: right;">1.00</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1093.35</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">832.09</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">b_Intercept[2]</td>
-<td style="text-align: right;">-2.58</td>
-<td style="text-align: right;">-2.57</td>
-<td style="text-align: right;">-2.57</td>
+<td style="text-align: right;">-3.02</td>
+<td style="text-align: right;">-3.02</td>
+<td style="text-align: right;">-3.01</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-3.69</td>
-<td style="text-align: right;">-1.44</td>
+<td style="text-align: right;">-4.13</td>
+<td style="text-align: right;">-1.87</td>
 <td style="text-align: right;">1.00</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1078.39</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">816.75</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">b_Intercept[3]</td>
-<td style="text-align: right;">-0.75</td>
-<td style="text-align: right;">-0.74</td>
-<td style="text-align: right;">-0.77</td>
+<td style="text-align: right;">-1.19</td>
+<td style="text-align: right;">-1.19</td>
+<td style="text-align: right;">-1.19</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-1.86</td>
-<td style="text-align: right;">0.39</td>
-<td style="text-align: right;">0.90</td>
-<td style="text-align: right;">0.84</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1072.93</td>
+<td style="text-align: right;">-2.29</td>
+<td style="text-align: right;">-0.03</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">811.51</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">b_Intercept[4]</td>
-<td style="text-align: right;">1.26</td>
-<td style="text-align: right;">1.27</td>
-<td style="text-align: right;">1.26</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">0.84</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">0.18</td>
-<td style="text-align: right;">2.41</td>
-<td style="text-align: right;">0.99</td>
-<td style="text-align: right;">0.97</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1074.19</td>
+<td style="text-align: right;">-0.30</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">808.73</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">b_versionexperimental_group</td>
-<td style="text-align: right;">0.45</td>
-<td style="text-align: right;">0.45</td>
-<td style="text-align: right;">0.43</td>
+<td style="text-align: left;">b_versioncontrol_group</td>
+<td style="text-align: right;">-0.44</td>
+<td style="text-align: right;">-0.44</td>
+<td style="text-align: right;">-0.43</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-0.04</td>
-<td style="text-align: right;">0.92</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">0.86</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">797.94</td>
+<td style="text-align: right;">-0.92</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">773.79</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">b_question_typeleast_affected_questions</td>
-<td style="text-align: right;">-3.24</td>
-<td style="text-align: right;">-3.23</td>
-<td style="text-align: right;">-3.41</td>
+<td style="text-align: right;">-3.15</td>
+<td style="text-align: right;">-3.13</td>
+<td style="text-align: right;">-3.26</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-4.67</td>
-<td style="text-align: right;">-1.82</td>
+<td style="text-align: right;">-4.54</td>
+<td style="text-align: right;">-1.68</td>
 <td style="text-align: right;">1.00</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1305.70</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1224.58</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">b_question_typesemi_affected_questions</td>
-<td style="text-align: right;">-1.41</td>
-<td style="text-align: right;">-1.40</td>
-<td style="text-align: right;">-1.45</td>
+<td style="text-align: right;">-1.55</td>
+<td style="text-align: right;">-1.55</td>
+<td style="text-align: right;">-1.52</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-2.50</td>
-<td style="text-align: right;">-0.27</td>
+<td style="text-align: right;">-2.65</td>
+<td style="text-align: right;">-0.40</td>
+<td style="text-align: right;">1.00</td>
 <td style="text-align: right;">0.99</td>
-<td style="text-align: right;">0.98</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">965.00</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">751.48</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">b_current_class</td>
-<td style="text-align: right;">0.43</td>
-<td style="text-align: right;">0.43</td>
-<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: right;">0.41</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">0.23</td>
 <td style="text-align: right;">0.63</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.99</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">696.74</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">776.60</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">b_versionexperimental_group:question_typeleast_affected_questions</td>
-<td style="text-align: right;">0.09</td>
-<td style="text-align: right;">0.09</td>
-<td style="text-align: right;">0.08</td>
+<td style="text-align: left;">b_versioncontrol_group:question_typeleast_affected_questions</td>
+<td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">-0.09</td>
+<td style="text-align: right;">-0.11</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-0.29</td>
-<td style="text-align: right;">0.46</td>
+<td style="text-align: right;">-0.47</td>
+<td style="text-align: right;">0.27</td>
 <td style="text-align: right;">0.68</td>
 <td style="text-align: right;">0.32</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">4611.07</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">4939.60</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">b_versionexperimental_group:question_typesemi_affected_questions</td>
-<td style="text-align: right;">-0.13</td>
-<td style="text-align: right;">-0.13</td>
-<td style="text-align: right;">-0.13</td>
+<td style="text-align: left;">b_versioncontrol_group:question_typesemi_affected_questions</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">0.16</td>
 <td style="text-align: right;">0.95</td>
-<td style="text-align: right;">-0.44</td>
-<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">-0.18</td>
+<td style="text-align: right;">0.44</td>
 <td style="text-align: right;">0.80</td>
 <td style="text-align: right;">0.38</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">4580.79</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">4544.29</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>There was not evidence that version was related differently for the semi-affected questions[-0.13; 95% HDI -0.44 - 0.18] and the least affected questions [0.09; 95% HDI -0.29 - 0.46]. Vitally, by including the class level as a fixed effect, the other fixed effects and interaction terms are estimated with class level held constant. This suggests that the unequal proportions are not the cause of the compelling (significant) differences in other effects in the model.</p>
+<p>There was not evidence that version was related differently for the semi-affected questions[0.13; 95% HDI -0.18 - 0.44] and the least affected questions [-0.09; 95% HDI -0.47 - 0.27]. Vitally, by including the class level as a fixed effect, the other fixed effects and interaction terms are estimated with class level held constant. This suggests that the unequal proportions are not the cause of the compelling (significant) differences in other effects in the model.</p>
 <p>Figure 2 visualizes the posterior distributions that are directly relevant to the research questions from Table 1. The distributions show the 95% range of plausible estimates for each effect with the shaded region representing 80% of plausible estimates. It can be seen that all of these estimates do not overlap zero, except for directly affected questions.</p>
 <p><strong>Figure 2: The posterior distributions of the Bayesian Ordinal Model.</strong></p>
 <div class="cell">
@@ -283,6 +283,185 @@ ul.task-list li input[type="checkbox"] {
 <div class="cell">
 <div class="cell-output-display">
 <p><img src="report_ordinal_files/figure-html/fig_4-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: right;">Median</th>
+<th style="text-align: right;">Mean</th>
+<th style="text-align: right;">MAP</th>
+<th style="text-align: right;">CI</th>
+<th style="text-align: right;">CI_low</th>
+<th style="text-align: right;">CI_high</th>
+<th style="text-align: right;">pd</th>
+<th style="text-align: right;">ps</th>
+<th style="text-align: right;">Rhat</th>
+<th style="text-align: right;">ESS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">b_Intercept[1]</td>
+<td style="text-align: right;">-3.35</td>
+<td style="text-align: right;">-3.35</td>
+<td style="text-align: right;">-3.35</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-4.27</td>
+<td style="text-align: right;">-2.43</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">586.48</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b_Intercept[2]</td>
+<td style="text-align: right;">-1.43</td>
+<td style="text-align: right;">-1.42</td>
+<td style="text-align: right;">-1.40</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-2.35</td>
+<td style="text-align: right;">-0.53</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">578.53</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b_Intercept[3]</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.46</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-0.50</td>
+<td style="text-align: right;">1.32</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">571.76</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b_Intercept[4]</td>
+<td style="text-align: right;">2.43</td>
+<td style="text-align: right;">2.43</td>
+<td style="text-align: right;">2.47</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">3.35</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">565.87</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b_current_class2</td>
+<td style="text-align: right;">0.91</td>
+<td style="text-align: right;">0.91</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-0.08</td>
+<td style="text-align: right;">1.92</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">1.01</td>
+<td style="text-align: right;">603.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b_current_class3</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">1.72</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.49</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">958.29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b_current_class4</td>
+<td style="text-align: right;">1.46</td>
+<td style="text-align: right;">1.46</td>
+<td style="text-align: right;">1.46</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">2.30</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">710.97</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b_versioncontrol_group</td>
+<td style="text-align: right;">0.71</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.81</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-0.45</td>
+<td style="text-align: right;">1.79</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">703.40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b_current_class2:versioncontrol_group</td>
+<td style="text-align: right;">-1.31</td>
+<td style="text-align: right;">-1.29</td>
+<td style="text-align: right;">-1.38</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-2.74</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">681.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">b_current_class3:versioncontrol_group</td>
+<td style="text-align: right;">-1.73</td>
+<td style="text-align: right;">-1.72</td>
+<td style="text-align: right;">-1.80</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-3.02</td>
+<td style="text-align: right;">-0.41</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">693.45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b_current_class4:versioncontrol_group</td>
+<td style="text-align: right;">-0.62</td>
+<td style="text-align: right;">-0.62</td>
+<td style="text-align: right;">-0.62</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-1.92</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">662.62</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </section>
