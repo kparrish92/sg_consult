@@ -3,8 +3,8 @@ title: "Updated Bayesian Ordinal Analysis"
 output: html_document
 format:
   html: 
-    fig-format: svg
-date: "2025-05-13"
+    fig-format: png
+date: "2025-05-29"
 ---
 
 ```{r setup, echo = FALSE, include = FALSE}
@@ -20,7 +20,11 @@ library(bayesplot)
 library(bayestestR)
 
 td = read.csv(here("data", "ratings_tidy.csv")) %>% 
-  filter(question_type != "old_directly_affected_questions")
+  filter(question_type != "old_directly_affected_questions") %>% 
+  mutate(version = case_when(
+    version == 1 ~ "experimental_group",
+    version == 2 ~ "control_group"
+  ))
 
 ```
 
@@ -93,6 +97,8 @@ pct_df_preq_all %>%
   ylab("Percentage of Ratings") + 
   theme(strip.text.y = element_text(angle = 0),
         legend.position = "none")
+
+ggsave(here("plots", "fig1.png"), dpi = 600)
 ```
 
 Table 1 describes posterior distributions of the Bayesian ordinal model, and corroborates the descriptive observations in Figure 1. The model contains five "intercepts" represent cut points in the probability space. If we think of the probability space as a rectangle with a given area that we "cut" into 5 pieces (one for each answer choice). The larger the area of the rectangle in a given piece directly responds to its probability as predicted by the model. That is, if the area of one of the five part of the great rectangle is .5 the area of the total (of the entire rectangle - or probability space), then we say that this the model predicts that the probability of that answer is also .5
@@ -132,13 +138,15 @@ posterior <- as.matrix(ord_mod_all)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior,
-           pars = c("b_version2", "b_version2:question_typeleast_affected_questions", "b_version2:question_typesemi_affected_questions",
+           pars = c("b_versionexperimental_group", "b_versionexperimental_group:question_typeleast_affected_questions", "b_versionexperimental_group:question_typesemi_affected_questions",
                     "b_current_class"),
            prob = 0.8) + plot_title +
   scale_y_discrete(limits = c("b_current_class",
-  "b_version2:question_typeleast_affected_questions",
-  "b_version2:question_typesemi_affected_questions",
-                                       "b_version2")) + theme_minimal()
+  "b_versionexperimental_group:question_typeleast_affected_questions",
+  "b_versionexperimental_group:question_typesemi_affected_questions",
+                                       "b_versionexperimental_group")) + theme_minimal()
+
+ggsave(here("plots", "fig2.png"), dpi = 600)
 
 ```
 
@@ -186,6 +194,8 @@ pct_df_preq_all_class %>%
   ylab("Current Class") + 
   theme(strip.text.y = element_text(angle = 0),
         legend.position = "none")
+
+ggsave(here("plots", "fig3.png"), dpi = 600)
 ```
 
 
@@ -195,10 +205,11 @@ posterior_o<- as.matrix(ord_mod_class)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_areas(posterior_o,
-           pars = c("b_version", 
-                    "b_current_class2:version", "b_current_class3:version", "b_current_class4:version"),
+           pars = c("b_versionexperimental_group", 
+                    "b_current_class2:versionexperimental_group", "b_current_class3:versionexperimental_group", "b_current_class4:versionexperimental_group"),
            prob = 0.8) + plot_title + theme_minimal()
 
+ggsave(here("plots", "fig4.png"), dpi = 600)
 ```
 
 
